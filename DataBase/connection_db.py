@@ -1,7 +1,6 @@
 from sqlalchemy import create_engine
-from sqlalchemy import text
+from sqlalchemy.orm import Session
 import yaml
-import psycopg2
 import os
 
 def engine():
@@ -15,7 +14,7 @@ def engine():
     url = f"postgresql+psycopg2://{config['username']}:{config['password']}@{config['host']}:{config['port']}/{config['database_name']}"
     try:
         eng = create_engine(url=url, echo=False)
-        with eng.connect() as conn:
+        with Session(eng) as sess:
             pass
     except Exception as e:
         raise RuntimeError('Неправильные данные для подключения к базе данных') from e

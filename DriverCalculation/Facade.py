@@ -1,6 +1,7 @@
-from .EnergyCalulation import DCMotorGearRatioCalculator, DCMotorTorqueCalculator, DCMotorPowerCalculator
-from .SourData import IMotorData, ISourceData, IGearData
+from .EnergyCalulation import DCMotorPowerTorqueCalculator
+from utils.SourData import IMotorData, ISourceData, IGearData
 from DataBase.repository import DatabaseRepository
+from DataBase.FindEngine import FindEngine 
 
 
 class DCMotorEnergyFacade:
@@ -9,16 +10,9 @@ class DCMotorEnergyFacade:
     Реализует принцип единой точки входа
     """
     
-    def __init__(self, source_data: ISourceData, motor_data: IMotorData, gear_data: IGearData):
+    def __init__(self, source_data: ISourceData):
         self.source_data = source_data
-        self.motor_data = motor_data
-        self.gear_data = gear_data
-        
-        # Инициализация калькуляторов
-        self.power_calculator = DCMotorPowerCalculator(source_data, gear_data)
-        self.torque_calculator = DCMotorTorqueCalculator(source_data, motor_data, gear_data)
-        self.gear_ratio_calculator = DCMotorGearRatioCalculator(source_data, motor_data, gear_data)
-        
+        self.required_power_torque_calculator = DCMotorPowerTorqueCalculator(source_data) 
     
     def get_all_calculations(self) -> dict:
         """
@@ -28,59 +22,54 @@ class DCMotorEnergyFacade:
             dict: Словарь с результатами расчетов
         """
         return {
-            'power': self.power_calculator.calculate_power(),
-            'torque': self.torque_calculator.calculate_torque(),
-            'gear_ratio': self.gear_ratio_calculator.calculate_gear_ratio(),
-            'max torque_with kpd': self.get_torque_with_gear()
+            'power': self.required_power_torque_calculator.required_power,
+            'torque': self.required_power_torque_calculator.max_torque,
         }
-    
-    def get_power(self) -> float:
-        """Возвращает расчетную мощность"""
-        return self.power_calculator.calculate_power()
-    
-    def get_torque(self) -> float:
-        """Возвращает расчетный момент"""
-        return self.torque_calculator.calculate_torque()
-    
-    def get_torque_with_gear(self) -> float:
-        """Возвращает расчетный момент с учетом КПД редуктора"""
-        return self.power_calculator.max_torque_with_gear
-    
-    def get_gear_ratio(self) -> float:
-        """Возвращает расчетное передаточное отношение"""
-        return self.gear_ratio_calculator.calculate_gear_ratio()
+
     
 
-class EngineDCFacade:
+class DBFacade:
     """
-    Фасад для работы с таблицей engine_dc
+    Фасад для работы с таблицами
     Предоставляет методы для CRUD-операций
     """
-    TABLE_NAME = "engine_dc"
 
-    def __init__(self):
+    def __init__(self, TABLE_NAME):
         self.repo = DatabaseRepository()
+        self.TABLE_NAME = TABLE_NAME
 
-    def get_all_engines(self):
+    def get_all(self):
         """Получить все записи из engine_dc"""
-        return self.repo.get_all_data_from_table(self.TABLE_NAME)
+        return self.repo.get_all(self.TABLE_NAME)
 
-    def add_engine(self, data):
+    def add(self, data):
         """Добавить запись в engine_dc
         data: dict с параметрами двигателя
         """
         self.repo.add_data(self.TABLE_NAME, data)
 
-    def update_engine(self, engine_id, data):
+    def update(self, engine_id, data):
         """Обновить запись по id
         engine_id: int
         data: dict с новыми параметрами
         """
         self.repo.update_data(self.TABLE_NAME, engine_id, data)
 
-    def delete_engine(self, engine_id):
+    def delete(self, engine_id):
         """Удалить запись по id
         engine_id: int
         """
         self.repo.delete_data(self.TABLE_NAME, engine_id, {})
+
+class FindEngineFacade:
+    def __init__(self):
+        self.find_engine = FindEngine()
+
+    def find_closest_engine_power(self, orm_model, target_value):
+        """Поиск двигателя с мощностью, наиболее близкой к требуемой"""
+        return self.find_engine.find_closest_engine_power(orm_model, target_value)
+    
+    def find_closest_gear_i(self, orm_model, target_value):
+        """Поиск редуктора с передаточным отношением, наиболее близким к оптимальному значению"""
+        return self.find_engine.find_closest_gear_i(orm_model, target_value)
     

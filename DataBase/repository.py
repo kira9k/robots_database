@@ -1,47 +1,65 @@
-from DriverCalculation.Interfaces import IDatabaseEditer
+
+from utils.Interfaces import IDatabaseEditer
 from DataBase.connection_db import engine
-from sqlalchemy import text
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select
 from typing import Dict, Any, List
+from DataBase.ORMModel import EngineDC
+
 
 class DatabaseRepository(IDatabaseEditer):
     """
-    Класс-репозиторий для работы с базой данных PostgreSQL
-    Реализует методы для CRUD-операций и подключения к базе
+    Универсальный ORM-репозиторий для работы с любыми таблицами
     """
-
-    @staticmethod
-    def get_engine():
-        """Получить объект engine для подключения к базе данных"""
-        return engine()
-
     def __init__(self):
-        self.engine = self.get_engine()
+        self.engine = engine()
+        self.Session = sessionmaker(bind=self.engine)
 
-    def delete_data(self, table_name: str, data_id: int, data: Dict[str, Any]) -> None:
-        with self.engine.connect() as conn:
-            query = text(f"DELETE FROM {table_name} WHERE id = :id")
-            conn.execute(query, {"id": data_id})
-            conn.commit()
-
-    def get_all_data_from_table(self, table_name: str) -> List[Dict[str, Any]]:
-        with self.engine.connect() as conn:
-            query = text(f"SELECT * FROM {table_name}")
-            result = conn.execute(query)
-            return [dict(row._mapping) for row in result.fetchall()]
+    def get_all(self, model) -> List[Dict[str, Any]]:
+        stmt = select(model)
+        with self.Session() as session:
+            result = session.scalars(stmt)
+            data = []
+            for item in result.all():
+                d = item.__dict__.copy() 
+                d.pop('_sa_instance_state', None)  
+                data.append(d)
         
-    def add_data(self, table_name: str, data: Dict[str, Any]) -> None:
-        with self.engine.connect() as conn:
-            columns = ', '.join(data.keys())
-            values = ', '.join([f":{k}" for k in data.keys()])
-            query = text(f"INSERT INTO {table_name} ({columns}) VALUES ({values})")
-            conn.execute(query, data)
-            conn.commit()
+            return data
 
-    def update_data(self, table_name: str, data_id: int, data: Dict[str, Any]) -> None:
-        with self.engine.connect() as conn:
-            set_clause = ', '.join([f"{k} = :{k}" for k in data.keys()])
-            query = text(f"UPDATE {table_name} SET {set_clause} WHERE id = :id")
-            data_with_id = dict(data)
-            data_with_id["id"] = data_id
-            conn.execute(query, data_with_id)
-            conn.commit()
+    def add(self, model, data: Dict[str, Any]) -> None:
+        """
+        Добавить запись в таблицу
+        model: класс ORM-модели
+        data: dict с параметрами
+        """
+        with self.Session() as session:
+            obj = model(**data)
+            session.add(obj)
+            session.commit()
+            
+    def update(self, model, obj_id: int, data: Dict[str, Any]) -> None:
+        """
+        Обновить запись по id
+        model: класс ORM-модели
+        obj_id: int
+        data: dict с новыми параметрами
+        """
+        with self.Session() as session:
+            obj = session.query(model).get(obj_id)
+            if obj:
+                for key, value in data.items():
+                    setattr(obj, key, value)
+                session.commit()
+
+    def delete(self, model, obj_id: int) -> None:
+        """
+        Удалить запись по id
+        model: класс ORM-модели
+        obj_id: int
+        """
+        with self.Session() as session:
+            obj = session.query(model).get(obj_id)
+            if obj:
+                session.delete(obj)
+                session.commit()

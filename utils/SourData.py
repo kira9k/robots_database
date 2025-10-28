@@ -56,6 +56,7 @@ class DataDriver(IMotorData):
     R: float
     J: float
     m: float
+    k: float
 
         
 
