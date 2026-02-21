@@ -90,8 +90,17 @@ class PlotLoadDiagram:
         self.data_for_orms = DataGivenLoadDiagram(self.source_data, self.motor_data, self.gear_data).get_result()
         self.k, self.b = self._find_line_equation(0, self.data_for_orms['idle_speed'], self.data_for_orms["torque_nom"], self.data_for_orms['nom_speed'])
     
-    ##TODO разделить функцию для точек и линий, добавить фасад, вынести функцию линии в utils
-    def plot_orms(self):
+    def _plot_points(self):
+        plt.scatter(self.data_for_orms['torque_stat_gear'], 0, label='Мст')
+        plt.scatter(self.data_for_orms['torque_start'], 0, label='Ммакс')
+        plt.scatter(self.data_for_orms['torque_stop'],0, label='Мторм')
+        plt.scatter(0,self.data_for_orms['idle_speed'], label=r"$\omega$хх")
+        plt.scatter(0, self.data_for_orms['nom_speed'], label=r"$\omega$ном")
+        plt.scatter(self.data_for_orms['torque_nom_with_coef'], 0, label=r'Мном*$lambda$')
+        plt.scatter(self.data_for_orms['torque_nom'], 0, label='Мном')
+        plt.scatter(0, self.data_for_orms['max_speed_with_gear'], label=r"$\omega$max") 
+        return 
+    def _plot_lines(self):
         plt.plot([self.data_for_orms['torque_stat_gear'], self.data_for_orms['torque_stat_gear']], [0, self.data_for_orms["max_speed_with_gear"]], 'r--')
         plt.plot([self.data_for_orms['torque_start'], self.data_for_orms['torque_start']], [0, self.data_for_orms["max_speed_with_gear"]], color='black')
         plt.plot([self.data_for_orms['torque_stop'], self.data_for_orms['torque_stop']], [0, self.data_for_orms["max_speed_with_gear"]], color='black' )
@@ -105,20 +114,18 @@ class PlotLoadDiagram:
         plt.plot([0, self.data_for_orms['torque_nom']], [self.data_for_orms['nom_speed'],self.data_for_orms['nom_speed']], 'b--')
         plt.plot([self.data_for_orms['torque_nom'], self.data_for_orms['torque_nom']], [0,self.data_for_orms['nom_speed']], 'b--')
  
-        plt.scatter(self.data_for_orms['torque_stat_gear'], 0, label='Мст')
-        plt.scatter(self.data_for_orms['torque_start'], 0, label='Ммакс')
-        plt.scatter(self.data_for_orms['torque_stop'],0, label='Мторм')
-        plt.scatter(0,self.data_for_orms['idle_speed'], label=r"$\omega$хх")
-        plt.scatter(0, self.data_for_orms['nom_speed'], label=r"$\omega$ном")
-        plt.scatter(self.data_for_orms['torque_nom_with_coef'], 0, label=r'Мном*$lambda$')
-        plt.scatter(self.data_for_orms['torque_nom'], 0, label='Мном')
-        plt.scatter(0, self.data_for_orms['max_speed_with_gear'], label=r"$\omega$max")       
-
+    def _setup_layout(self):
         plt.xlabel(r"$M_д$, Нм")
         plt.ylabel(r"$\omega$, рад/с")
         plt.grid()
         plt.legend()
         plt.title("Приведённая диаграмма нагрузки и ОРМС двигателя.")
+
+    def plot_orms(self):
+        self._plot_lines()
+        self._plot_points()
+        self._setup_layout()
+
         plt.show()
     
     @staticmethod

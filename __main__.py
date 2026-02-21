@@ -1,19 +1,21 @@
 from utils.SourData import SourceDataDriver, DataDriver, DataGear
-from DriverCalculation.Facade import DCMotorEnergyFacade, DBFacade, FindEngineFacade
+from DriverCalculation.Facade import DCMotorEnergyFacade, DBFacade, FindEngineFacade, FindEncoderFacade, EncoderFacade
 from DriverCalculation.GearCalculate import GearCalulator
-from DataBase.ORMModel import EngineDC, Gear, EngineType
+from DataBase.ORMModel import EngineDC, Gear, Encoder
 from DriverCalculation.EnergyCalulation import DCMotorPowerTorqueReCalculator
 from DriverCalculation.VerificationCalculation import VerificationCalculation
 from Graphics.PlotGivenLoadDiagram import PlotLoadDiagram, DataGivenLoadDiagram
-
+#from DriverCalculation.ThermalCalulation import ThermalCalculator
+from ThermalVerification import ThermalCalculator
+from ThermalVerification.handlers import ConsoleResultHandler
+from Synthesis.dynamic_error import DynamicErrorCalculator, ErrorData
 import math
 
 def main():
-    # Инициализация репозитория для работы с базой данных
-
     ###для теста###
     engine_dc = EngineDC
     gear = Gear
+    encoder = Encoder
     ###конец теста###
 
     engine_bd = DBFacade(engine_dc)
@@ -27,7 +29,8 @@ def main():
         tp_rel=0.2,
         max_stat_torque=235.2,
         max_dyn_torque=39.672,
-        eq_torque_intertia=20.88
+        eq_torque_intertia=20.88,
+        max_error=0.01, #заглушка
     )
 
 
@@ -64,13 +67,18 @@ def main():
     gear_calculator = GearCalulator(source_data, motor_data)
     optimal_gear_ratio = gear_calculator.gear_ratio_optimal
     print(f"Оптимальное передаточное отношение: {optimal_gear_ratio:.2f}")
-    closest_gear = find_engine_facade.find_closest_gear_i(gear, optimal_gear_ratio)
+    closest_gear = find_engine_facade.find_closest_gear_i(gear, optimal_gear_ratio, source_data, results)
     print("=== НАЙДЕННЫЙ РЕДУКТОР ===")
     gear_data = DataGear(
         name=closest_gear["gear_name"],
         i_nom=closest_gear["i"],
         m=closest_gear["mass"],
-        kpd=closest_gear["efficiency"]
+        kpd=closest_gear["efficiency"],
+        c = closest_gear["c"],
+        clearance = closest_gear["clearance"],
+        speed_norm = closest_gear["speed_norm"],
+        torque_nom = closest_gear["torque_nom"]
+
     )
     print(gear_data.__dict__)
     dc_motor_power_Torque_Re_Calculator = DCMotorPowerTorqueReCalculator(source_data, gear_data)
@@ -92,7 +100,28 @@ def main():
     print(orms.get_result())
     plot = PlotLoadDiagram(motor_data, source_data, gear_data)
     plot.plot_orms()
-    
+
+    ##Тепловой расчет
+    print("=== ТЕПЛОВОЙ РАСЧЕТ ===")
+    calculator = ThermalCalculator(source_data, motor_data, gear_data)
+    calculator.run()
+
+    ##Синтез
+    print("=== ДОПУСТИМЫЕ ОШИБКИ ===")
+    print(DynamicErrorCalculator(source_data, motor_data, gear_data))
+    error = DynamicErrorCalculator(source_data, motor_data, gear_data)
+
+    ##Энкодер
+    # Использование фасада для расчетов
+    print("=== РАСЧЕТ ЭНКОДЕРА ===")
+    calculator_enc = EncoderFacade(error, gear_data)
+    results = calculator_enc.get_minimal_lines_count
+    print(f"Минимальное количество жискрет энкодера: {results}")
+    ##Поиск энкодера
+    find_encoder_facade = FindEncoderFacade()
+    closest_encoder = find_encoder_facade.find_closest_encoder_lines(encoder, results, source_data, gear_data)
+    print("=== НАЙДЕННЫЙ ЭНКОДЕР ===")
+    print(closest_encoder)
 
 if __name__ == "__main__":
     main()

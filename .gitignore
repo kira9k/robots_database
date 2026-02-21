@@ -1,4 +1,5 @@
 login_data.yaml
 *.pyc
 __pycache__/
-Kinematics
+Kinematic
+DataFromDb

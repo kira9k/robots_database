@@ -1,19 +1,22 @@
 
 from utils.Interfaces import IDatabaseEditer
 from DataBase.connection_db import engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, joinedload
 from sqlalchemy import select
 from typing import Dict, Any, List
-from DataBase.ORMModel import EngineDC
+from DataBase.ORMModel import EngineDC, Encoder, Gear
 
 
 class DatabaseRepository(IDatabaseEditer):
     """
-    Универсальный ORM-репозиторий для работы с любыми таблицами
+    ORM-репозиторий для работы с любыми таблицами.
     """
-    def __init__(self):
-        self.engine = engine()
-        self.Session = sessionmaker(bind=self.engine)
+    def __init__(self, session_factory=None):
+        if session_factory is None:
+            self.engine = engine()
+            self.Session = sessionmaker(bind=self.engine)
+        else:
+            self.Session = session_factory
 
     def get_all(self, model) -> List[Dict[str, Any]]:
         stmt = select(model)
@@ -63,3 +66,34 @@ class DatabaseRepository(IDatabaseEditer):
             if obj:
                 session.delete(obj)
                 session.commit()
+    
+    def get_data_with_relations(self, model) -> List[Dict[str, Any]]:
+        """
+        Метод для получения всех данных с связанными данными
+        """
+        
+        with self.Session() as session:
+            if model == Encoder:
+                encoders = session.query(Encoder)\
+                    .options(
+                        joinedload(Encoder.company_rel),
+                        joinedload(Encoder.type_rel)
+                    ).all()
+                result = encoders
+            elif model == EngineDC:
+                engines = session.query(EngineDC)\
+                    .options(
+                        joinedload(EngineDC.company_rel),
+                        joinedload(EngineDC.engine_type)
+                    ).all()
+                result = engines
+            elif model == Gear:
+                gears = session.query(Gear)\
+                    .options(
+                        joinedload(Gear.company_rel),
+                        joinedload(Gear.type_rel)
+                    ).all()
+                result = gears
+            
+        return result
+            

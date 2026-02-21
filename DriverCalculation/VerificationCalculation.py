@@ -18,12 +18,11 @@ class VerificationCalculation:
     def max_speed_with_gear(self) -> float:
         """Максимальная скорость двигателя с учетом редуктора"""
         return self.source_data.max_angl_speed * self.gear_data.i_nom
+    
     def verify_torque(self) -> bool:
-        
         """Проверка, что рассчитанный момент не превышает максимальный момент двигателя с учетом редуктора"""
         return self.max_torque_with_gear <= self.motor_data.torque_nom
     
     def verify_speed(self) -> bool:
         """Проверка, что расчетная скорость не превышает максимальную скорость двигателя с учетом редуктора"""
-        #print(speed_with_gear * 30/math.pi, self.motor_data.n_nom)
         return self.max_speed_with_gear * math.pi /30 <= self.motor_data.n_nom

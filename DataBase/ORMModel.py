@@ -75,3 +75,36 @@ class Gear(Base):
 
     company_rel = relationship('GearCompany')
     type_rel = relationship('GearType')
+
+class EncoderType(Base):
+    """ORM модель типа энкодера"""
+    __tablename__ = 'type_encoder'
+    id_type = Column(Integer, primary_key=True)
+    encoder_type = Column(String)
+
+class EncoderCompany(Base):
+    """ORM модель компании производителя энкодера"""
+    __tablename__ = 'company_encoder'
+    id_company_encoder = Column(Integer, primary_key=True)
+    company_name = Column(String)
+    company_country = Column(String)
+
+class Encoder(Base):
+    """ORM модель энкодера"""
+    __tablename__ = 'encoder'
+    id_encoder = Column(Integer, primary_key=True)
+    encoder_name = Column(String)
+    id_company = Column(Integer, ForeignKey('company_encoder.id_company_encoder'))
+    id_type_encoder = Column(Integer, ForeignKey('type_encoder.id_type'))
+    shaft_diameter = Column(Float)
+    rotor_breakway_torque = Column(Float)
+    rotor_moment_of_inertia = Column(Float)
+    maximum_rotation_speed = Column(Float)
+    supply_voltage = Column(Float)
+    lines_count = Column(Integer)
+    weight = Column(Float)
+    drawing = Column(LargeBinary)
+    price = Column(Numeric(9, 2))
+
+    company_rel = relationship('EncoderCompany')
+    type_rel = relationship('EncoderType')
