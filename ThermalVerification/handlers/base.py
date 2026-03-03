@@ -23,8 +23,5 @@ class IVerificationResultHandler(ABC):
             
         Returns:
             None
-            
-        Raises:
-            NotImplementedError: если метод не реализован в подклассе
         """
         pass

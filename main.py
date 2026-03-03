@@ -103,7 +103,7 @@ def main():
 
     )
     print(gear_data.__dict__)
-    dc_motor_power_Torque_Re_Calculator = DCMotorPowerTorqueReCalculator(source_data, gear_data)
+    dc_motor_power_Torque_Re_Calculator = DCMotorPowerTorqueReCalculator(source_data, gear_data, motor_data)
     print("=== РАСЧЕТЫ С УЧЕТОМ РЕДУКТОРА ===")
     print(f"Максимальная мощность с учетом КПД редуктора: {dc_motor_power_Torque_Re_Calculator.required_power_with_gear:.2f}")
     print(f"Максимальный необходимый момент с учетом КПД редуктора: {dc_motor_power_Torque_Re_Calculator.required_torque_with_gear:.2f}")
@@ -128,7 +128,7 @@ def main():
     ##Тепловой расчет
     print("=== ТЕПЛОВОЙ РАСЧЕТ ===")
     calculator = ThermalCalculator(source_data, motor_data, gear_data)
-    calculator.run()
+    print(calculator.execute_verification())
 
     ##Синтез
     print("=== ДОПУСТИМЫЕ ОШИБКИ ===")

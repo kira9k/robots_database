@@ -11,6 +11,9 @@ class ThermalVerificationResult:
         self.torque_eqv_square = torque_eqv_square
         self.motor_torque_square = motor_torque_square
     
+    def thermal_res(self):
+        return self.is_valid
+    
     def __str__(self) -> str:
         """Форматированный вывод результата."""
         status = "УСПЕШНО" if self.is_valid else "НЕ ПРОЙДЕНО"

@@ -1,3 +1,5 @@
+from json import encoder
+
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QMessageBox
 )   
@@ -60,23 +62,18 @@ class MainWindow(QMainWindow):
         self.design_window.show()
 
     def on_design_data(self, data: dict):
-        # Преобразуем входные строки в числа и создаём объект SourceDataDriver
-        try:
-            sd = SourceDataDriver(
-                max_angl_speed=float(data.get("max_angl_speed", 0) or 0),
-                max_angl_acc=float(data.get("max_angl_acc", 0) or 0),
-                max_angle_speed_wm=float(data.get("max_angle_speed_wm", 0) or 0),
-                max_angle_acc_wm=float(data.get("max_angle_acc_wm", 0) or 0),
-                tp=float(data.get("tp", 0) or 0),
-                tp_rel=float(data.get("tp_rel", 0) or 0),
-                max_stat_torque=float(data.get("max_stat_torque", 0) or 0),
-                max_dyn_torque=float(data.get("max_dyn_torque", 0) or 0),
-                eq_torque_intertia=float(data.get("eq_torque_intertia", 0) or 0),
-                max_error=float(data.get("max_error", 0) or 0),
-            )
-        except ValueError as e:
-            QMessageBox.warning(self, "Ошибка ввода", f"Некорректные входные данные: {e}")
-            return
+        sd = SourceDataDriver(
+            max_angl_speed=float(data.get("max_angl_speed", 0) or 0),
+            max_angl_acc=float(data.get("max_angl_acc", 0) or 0),
+            max_angle_speed_wm=float(data.get("max_angle_speed_wm", 0) or 0),
+            max_angle_acc_wm=float(data.get("max_angle_acc_wm", 0) or 0),
+            tp=float(data.get("tp", 0) or 0),
+            tp_rel=float(data.get("tp_rel", 0) or 0),
+            max_stat_torque=float(data.get("max_stat_torque", 0) or 0),
+            max_dyn_torque=float(data.get("max_dyn_torque", 0) or 0),
+            eq_torque_intertia=float(data.get("eq_torque_intertia", 0) or 0),
+            max_error=float(data.get("max_error", 0) or 0),
+        )
 
         # Запускаем расчёты (по аналогии с main.py)
         calculator = DCMotorEnergyFacade(sd)
@@ -140,17 +137,16 @@ class MainWindow(QMainWindow):
             'required_speed_with_gear': dc_motor_power_Torque_Re_Calculator.required_speed_with_gear
         }
         self.source_input_data = sd
-        self.calculation_results = {
-            'results': results,
-            'motor': motor_data,
-            'gear': closest_gear,
-            'gear_ratio': optimal_gear_ratio,
-        }
         thermal_calculator = ThermalCalculator(sd, motor_data, gear_data)
         thermal_data = thermal_calculator.get_data()
-        #print(thermal_data)
+        error = DynamicErrorCalculator(sd, motor_data, gear_data)
+        calculator_enc = EncoderFacade(error, gear_data)
+        results_enc = calculator_enc.get_minimal_lines_count
+        find_encoder_facade = FindEncoderFacade()
+        closest_encoder = find_encoder_facade.find_closest_encoder_lines(Encoder, results_enc, sd, gear_data)
         # create as independent top-level window (no parent)
-        self.result_window = ResultWindow(results, motor_data, optimal_gear_ratio, source_data=sd, gear=closest_gear, recalc_results=recalc_results, orms_results=orms_res, thermal_data=thermal_data)
+        
+        self.result_window = ResultWindow(results, motor_data, optimal_gear_ratio, source_data=sd, gear=closest_gear, recalc_results=recalc_results, orms_results=orms_res, thermal_data=thermal_data, error=error.get_data(), enc_min=results_enc, closest_encoder=closest_encoder)
         self.result_window.show()
 
 

@@ -6,6 +6,7 @@ class ErrorData:
     first_error: float
     second_error: float
     third_error: float
+    third_fourth_error: float
     fourth_error: float
     fifth_error: float
 
@@ -19,7 +20,7 @@ class DynamicErrorCalculator:
     @property
     def first_error(self):
         #sum_torque = (self.source_data.max_stat_torque + self.source_data.max_dyn_torque) 
-        first_error = self.source_data.max_stat_torque / (self.gear_data.kpd*self.gear_data.c)
+        first_error = 0.05 * self.source_data.max_stat_torque / (self.gear_data.kpd*self.gear_data.c)
         return first_error
 
     @property
@@ -47,6 +48,7 @@ class DynamicErrorCalculator:
             first_error=self.first_error,
             second_error=self.second_error,
             third_error=self.third_error,
+            third_fourth_error=self.third_plus_fourth_error,
             fourth_error=self.fourth_error,
             fifth_error=self.fifth_error
         )

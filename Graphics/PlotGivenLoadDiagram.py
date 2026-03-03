@@ -125,6 +125,7 @@ class PlotLoadDiagram:
         plt.title("Приведённая диаграмма нагрузки и ОРМС двигателя.")
 
     def plot_orms(self):
+        plt.clf()
         self._plot_lines()
         self._plot_points()
         self._setup_layout()

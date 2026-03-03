@@ -82,6 +82,7 @@ class ThermalCalculator:
                     self._torque_calculator.calculate_equivalent_acceleration(),
                     self._torque_calculator.calculate_omega_equivalent()
                 ),
+                "M_eqv_square": self._torque_calculator.calculate_equivalent_torque_square(),
             
         }
     

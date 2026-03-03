@@ -34,8 +34,7 @@ class ThermalEquivalentTorqueCalculator:
     def calculate_tracking_torque(self, a_eqv: float, omega_eqv: float) -> float:
         """Расчёт момента слежения Mс"""
         return (self._given_load_diagram_data._torque_stat_gear + 
-                (self._given_load_diagram_data._j_sum * a_eqv * omega_eqv ** 2) / 
-                self._gear_data.kpd)
+                (self._given_load_diagram_data._j_sum * a_eqv * omega_eqv ** 2))
     
     def calculate_equivalent_torque_square(self) -> float:
         """Расчет квадрата эквивалетного момента нагрузки двигателя привода"""
