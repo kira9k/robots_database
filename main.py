@@ -1,3 +1,5 @@
+import sys
+
 from utils.SourData import SourceDataDriver, DataDriver, DataGear
 from DriverCalculation.Facade import DCMotorEnergyFacade, DBFacade, FindEngineFacade, FindEncoderFacade, EncoderFacade
 from DriverCalculation.GearCalculate import GearCalulator
@@ -10,8 +12,18 @@ from ThermalVerification import ThermalCalculator
 from ThermalVerification.handlers import ConsoleResultHandler
 from Synthesis.dynamic_error import DynamicErrorCalculator, ErrorData
 import math
+from GUI.MainWindow import MainWindow
+from PySide6.QtWidgets import (
+    QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
+)
+
 
 def main():
+
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
     ###для теста###
     engine_dc = EngineDC
     gear = Gear
@@ -21,15 +33,25 @@ def main():
     engine_bd = DBFacade(engine_dc)
     gear_bd = DBFacade(gear)
     source_data = SourceDataDriver(
-        max_angl_speed=0.66,
-        max_angl_acc=1.9,
-        max_angle_speed_wm=0.4,
-        max_angle_acc_wm=0.2,
+        # max_angl_speed=0.66,
+        # max_angl_acc=1.9,
+        # max_angle_speed_wm=0.4,
+        # max_angle_acc_wm=0.2,
+        # tp=0.35,
+        # tp_rel=0.2,
+        # max_stat_torque=235.2,
+        # max_dyn_torque=39.672,
+        # eq_torque_intertia=20.88,
+        # max_error=0.01, #заглушка
+        max_angl_speed=2.491,
+        max_angl_acc=7.118,
+        max_angle_speed_wm=1.245,
+        max_angle_acc_wm=4.983,
         tp=0.35,
-        tp_rel=0.2,
-        max_stat_torque=235.2,
-        max_dyn_torque=39.672,
-        eq_torque_intertia=20.88,
+        tp_rel=0.05,
+        max_stat_torque=84.86,
+        max_dyn_torque=23.23,
+        eq_torque_intertia=4.61,
         max_error=0.01, #заглушка
     )
 
@@ -92,6 +114,8 @@ def main():
     print("=== ВЕРИФИКАЦИЯ ===")
     print(f"Проверка момента: {'ОК' if torque_ok else 'НЕ ОК'}")
     print(f"Проверка скорости: {'ОК' if speed_ok else 'НЕ ОК'}")
+    if not speed_ok:
+        pass
 
     # print(f"Максимальный необходимы момент с учетом КПД редуктора: {results['max torque_with kpd']:.2f}")
     #print(gear_bd.get_all())

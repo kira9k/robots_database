@@ -24,8 +24,16 @@ class DCMotorEnergyFacade:
         return {
             'power': self.required_power_torque_calculator.required_power,
             'torque': self.required_power_torque_calculator.max_torque,
+            'original_power': self.required_power_torque_calculator.max_power,
+            'power_margin': self.required_power_torque_calculator.POWER_MARGIN
         }
     
+    def change_required_power_margin(self):
+        """
+        Позволяет изменить коэффициент запаса мощности
+        """
+        self.required_power_torque_calculator.POWER_MARGIN += 0.1
+
 class EncoderFacade:
     def __init__(self, error, gear_data: IGearData):
         self.minimal_lines_count = EncoderCalculator(error, gear_data)

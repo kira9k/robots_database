@@ -1,6 +1,16 @@
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel
-)
+    QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QMessageBox
+)   
+from .ResultWindow import ResultWindow
+from utils.SourData import SourceDataDriver, DataDriver, DataGear
+from DriverCalculation.Facade import DCMotorEnergyFacade, FindEngineFacade, FindEncoderFacade, EncoderFacade
+from DriverCalculation.GearCalculate import GearCalulator
+from DriverCalculation.EnergyCalulation import DCMotorPowerTorqueReCalculator
+from DriverCalculation.VerificationCalculation import VerificationCalculation
+from Graphics.PlotGivenLoadDiagram import PlotLoadDiagram, DataGivenLoadDiagram
+from ThermalVerification import ThermalCalculator
+from Synthesis.dynamic_error import DynamicErrorCalculator, ErrorData
+import math
 from sqlalchemy import select
 from .DesignWindow import DesignWindow
 from .TableWindow import TableWindow
@@ -46,10 +56,106 @@ class MainWindow(QMainWindow):
 
     def create_design_window(self):
         self.design_window = DesignWindow()
+        self.design_window.data_ready.connect(self.on_design_data)
         self.design_window.show()
 
+    def on_design_data(self, data: dict):
+        # Преобразуем входные строки в числа и создаём объект SourceDataDriver
+        try:
+            sd = SourceDataDriver(
+                max_angl_speed=float(data.get("max_angl_speed", 0) or 0),
+                max_angl_acc=float(data.get("max_angl_acc", 0) or 0),
+                max_angle_speed_wm=float(data.get("max_angle_speed_wm", 0) or 0),
+                max_angle_acc_wm=float(data.get("max_angle_acc_wm", 0) or 0),
+                tp=float(data.get("tp", 0) or 0),
+                tp_rel=float(data.get("tp_rel", 0) or 0),
+                max_stat_torque=float(data.get("max_stat_torque", 0) or 0),
+                max_dyn_torque=float(data.get("max_dyn_torque", 0) or 0),
+                eq_torque_intertia=float(data.get("eq_torque_intertia", 0) or 0),
+                max_error=float(data.get("max_error", 0) or 0),
+            )
+        except ValueError as e:
+            QMessageBox.warning(self, "Ошибка ввода", f"Некорректные входные данные: {e}")
+            return
 
-app = QApplication(sys.argv)
-window = MainWindow()
-window.show()
-sys.exit(app.exec())
+        # Запускаем расчёты (по аналогии с main.py)
+        calculator = DCMotorEnergyFacade(sd)
+        results = calculator.get_all_calculations()
+
+        power = results.get('power')
+        torque = results.get('torque')
+
+        # Поиск двигателя в БД
+        find_engine_facade = FindEngineFacade()
+        closest_engine = find_engine_facade.find_closest_engine_power(EngineDC, power)
+
+        if closest_engine:
+            k = (closest_engine["u_nom"] - closest_engine["i_nom"] * closest_engine["r_nom"]) / (closest_engine["n_nom"] * math.pi / 30)
+            motor_data = DataDriver(
+                name=closest_engine["model"],
+                p_nom=closest_engine["p_nom"],
+                torque_nom=closest_engine["m_nom"],
+                n_nom=closest_engine["n_nom"],
+                U_nom=closest_engine["u_nom"],
+                I_nom=closest_engine["i_nom"],
+                R=closest_engine["r_nom"],
+                J=closest_engine["j_nom"],
+                m=closest_engine.get("m", 0),
+                k=k,
+            )
+        else:
+            motor_data = None
+
+        # Редуктор
+        if motor_data:
+            gear_calculator = GearCalulator(sd, motor_data)
+            optimal_gear_ratio = getattr(gear_calculator, 'gear_ratio_optimal', None)
+        else:
+            optimal_gear_ratio = None
+        closest_gear = find_engine_facade.find_closest_gear_i(Gear, optimal_gear_ratio, sd, results)
+        gear_data = DataGear(
+            name=closest_gear["gear_name"],
+            i_nom=closest_gear["i"],
+            m=closest_gear["mass"],
+            kpd=closest_gear["efficiency"],
+            c = closest_gear["c"],
+            clearance = closest_gear["clearance"],
+            speed_norm = closest_gear["speed_norm"],
+            torque_nom = closest_gear["torque_nom"]
+            )
+        print(closest_gear)
+
+        dc_motor_power_Torque_Re_Calculator = DCMotorPowerTorqueReCalculator(sd, gear_data, motor_data)
+
+        orms = DataGivenLoadDiagram(sd, motor_data, gear_data)
+        orms_res = orms.get_result()
+        orms_chart = PlotLoadDiagram(motor_data, sd, gear_data)
+        orms_chart.save_plot()
+
+        #print(orms.get_result())
+        # Показать результаты в отдельном окне
+        recalc_results = {
+            'required_power_with_gear': dc_motor_power_Torque_Re_Calculator.required_power_with_gear,
+            'required_torque_with_gear': dc_motor_power_Torque_Re_Calculator.required_torque_with_gear,
+            'required_speed_with_gear': dc_motor_power_Torque_Re_Calculator.required_speed_with_gear
+        }
+        self.source_input_data = sd
+        self.calculation_results = {
+            'results': results,
+            'motor': motor_data,
+            'gear': closest_gear,
+            'gear_ratio': optimal_gear_ratio,
+        }
+        thermal_calculator = ThermalCalculator(sd, motor_data, gear_data)
+        thermal_data = thermal_calculator.get_data()
+        #print(thermal_data)
+        # create as independent top-level window (no parent)
+        self.result_window = ResultWindow(results, motor_data, optimal_gear_ratio, source_data=sd, gear=closest_gear, recalc_results=recalc_results, orms_results=orms_res, thermal_data=thermal_data)
+        self.result_window.show()
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())

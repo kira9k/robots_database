@@ -21,7 +21,7 @@ class ThermalEquivalentTorqueCalculator:
     
     def calculate_time_tracking(self, time_cycle: float) -> float:
         """Расчёт времени слежения tс"""
-        return time_cycle - 2 * self._source_data.tp
+        return time_cycle * (1 - self._source_data.tp_rel)
     
     def calculate_equivalent_acceleration(self) -> float:
         """Расчёт амлпитуды изменения объекта управления Аэ"""

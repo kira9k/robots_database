@@ -71,6 +71,19 @@ class ThermalCalculator:
         )
         
         return result
+
+    def get_data(self):
+        """Возвращает данные для отображения в результатах."""
+        return {"t_cycle": self._torque_calculator.calculate_time_cycle(),
+                "t_s": self._torque_calculator.calculate_time_tracking(self._torque_calculator.calculate_time_cycle()),
+                "A_eqv": self._torque_calculator.calculate_equivalent_acceleration(),
+                "omega_eqv": self._torque_calculator.calculate_omega_equivalent(),
+                "M_c": self._torque_calculator.calculate_tracking_torque(
+                    self._torque_calculator.calculate_equivalent_acceleration(),
+                    self._torque_calculator.calculate_omega_equivalent()
+                ),
+            
+        }
     
     def run(self) -> None:
         """

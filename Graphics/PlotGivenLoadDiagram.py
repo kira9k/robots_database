@@ -61,6 +61,9 @@ class DataGivenLoadDiagram:
     
     @property
     def coef_forcing(self):
+        print(self.max_torque_with_gear)
+        print(self.max_torque_with_gear / self.motor_data.torque_nom)
+        print(math.ceil(self.max_torque_with_gear / self.motor_data.torque_nom))
         return math.ceil((self.max_torque_with_gear / self.motor_data.torque_nom) * 10) / 10 if self.max_torque_with_gear / self.motor_data.torque_nom > 1 else 1 
     
     def get_result(self):
@@ -83,7 +86,7 @@ class DataGivenLoadDiagram:
         }
 
 class PlotLoadDiagram:
-    def __init__(self, motor_data: IMotorData, source_data: ISourceData, gear_data: IGearData):
+    def __init__(self, motor_data, source_data, gear_data):
         self.source_data = source_data
         self.motor_data = motor_data
         self.gear_data = gear_data
@@ -99,7 +102,7 @@ class PlotLoadDiagram:
         plt.scatter(self.data_for_orms['torque_nom_with_coef'], 0, label=r'Мном*$lambda$')
         plt.scatter(self.data_for_orms['torque_nom'], 0, label='Мном')
         plt.scatter(0, self.data_for_orms['max_speed_with_gear'], label=r"$\omega$max") 
-        return 
+    
     def _plot_lines(self):
         plt.plot([self.data_for_orms['torque_stat_gear'], self.data_for_orms['torque_stat_gear']], [0, self.data_for_orms["max_speed_with_gear"]], 'r--')
         plt.plot([self.data_for_orms['torque_start'], self.data_for_orms['torque_start']], [0, self.data_for_orms["max_speed_with_gear"]], color='black')
@@ -126,16 +129,15 @@ class PlotLoadDiagram:
         self._plot_points()
         self._setup_layout()
 
-        plt.show()
+        #plt.show()
+    def save_plot(self):
+        self.plot_orms()
+        plt.savefig('image_graphic/chart.png')
     
     @staticmethod
     def _find_line_equation(x1, y1, x2, y2):
-        """Находит уравнение прямой по двум точкам"""
         if x1 == x2:
             return None, x1
         k = (y2 - y1) / (x2 - x1)
-
         b = y1 - k * x1
-
-
         return k,b

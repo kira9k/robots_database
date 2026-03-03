@@ -31,6 +31,7 @@ class FindEngine(DatabaseRepository):
     def find_closest_gear_i(self, orm_model, target_value, source_data, results_moment) -> Dict[str, Any]:
         """"Поиск редуктора с передаточным отношением, наиболее близким к оптимальному значению"""
         with self.Session() as session:
+            print(results_moment['torque'])
             stmt = (select(orm_model)
                     .where(source_data.max_angl_speed <= orm_model.speed_norm)
                     .where(results_moment['torque'] <= orm_model.torque_nom)

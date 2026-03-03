@@ -3,3 +3,4 @@ login_data.yaml
 __pycache__/
 Kinematic
 DataFromDb
+test.py
