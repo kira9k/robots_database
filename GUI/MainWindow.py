@@ -61,19 +61,8 @@ class MainWindow(QMainWindow):
         self.design_window.data_ready.connect(self.on_design_data)
         self.design_window.show()
 
-    def on_design_data(self, data: dict):
-        sd = SourceDataDriver(
-            max_angl_speed=float(data.get("max_angl_speed", 0) or 0),
-            max_angl_acc=float(data.get("max_angl_acc", 0) or 0),
-            max_angle_speed_wm=float(data.get("max_angle_speed_wm", 0) or 0),
-            max_angle_acc_wm=float(data.get("max_angle_acc_wm", 0) or 0),
-            tp=float(data.get("tp", 0) or 0),
-            tp_rel=float(data.get("tp_rel", 0) or 0),
-            max_stat_torque=float(data.get("max_stat_torque", 0) or 0),
-            max_dyn_torque=float(data.get("max_dyn_torque", 0) or 0),
-            eq_torque_intertia=float(data.get("eq_torque_intertia", 0) or 0),
-            max_error=float(data.get("max_error", 0) or 0),
-        )
+    def on_design_data(self, data):
+        sd = data
 
         # Запускаем расчёты (по аналогии с main.py)
         calculator = DCMotorEnergyFacade(sd)
@@ -120,7 +109,6 @@ class MainWindow(QMainWindow):
             speed_norm = closest_gear["speed_norm"],
             torque_nom = closest_gear["torque_nom"]
             )
-        print(closest_gear)
 
         dc_motor_power_Torque_Re_Calculator = DCMotorPowerTorqueReCalculator(sd, gear_data, motor_data)
 
@@ -129,7 +117,6 @@ class MainWindow(QMainWindow):
         orms_chart = PlotLoadDiagram(motor_data, sd, gear_data)
         orms_chart.save_plot()
 
-        #print(orms.get_result())
         # Показать результаты в отдельном окне
         recalc_results = {
             'required_power_with_gear': dc_motor_power_Torque_Re_Calculator.required_power_with_gear,
@@ -148,10 +135,3 @@ class MainWindow(QMainWindow):
         
         self.result_window = ResultWindow(results, motor_data, optimal_gear_ratio, source_data=sd, gear=closest_gear, recalc_results=recalc_results, orms_results=orms_res, thermal_data=thermal_data, error=error.get_data(), enc_min=results_enc, closest_encoder=closest_encoder)
         self.result_window.show()
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())

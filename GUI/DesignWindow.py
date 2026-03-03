@@ -2,8 +2,10 @@ from PySide6.QtWidgets import QVBoxLayout, QWidget, QLabel, QLineEdit, QPushButt
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QDoubleValidator
 
+from utils.SourData import SourceDataDriver  
+
 class DesignWindow(QWidget):
-    data_ready = Signal(dict)
+    data_ready = Signal(object)
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Исходные данные для проектирования")
@@ -96,19 +98,17 @@ class DesignWindow(QWidget):
         self.setLayout(layout)
     
     def get_input_data(self):
-        input_data = {
-            "max_angl_speed": self.input_max_angl_speed.text(),
-            "max_angl_acc": self.input_max_angl_acc.text(),
-            "max_angle_speed_wm": self.input_max_angle_speed_wm.text(),
-            "max_angle_acc_wm": self.input_max_angle_acc_wm.text(),
-            "tp": self.input_tp.text(),
-            "tp_rel": self.input_tp_rel.text(),
-            "max_stat_torque": self.input_max_stat_torque.text(),
-            "max_dyn_torque": self.input_max_dyn_torque.text(),
-            "eq_torque_intertia": self.input_eq_torque_intertia.text(),
-            "max_error": self.input_max_error.text()
-        }
-        return input_data
+        return SourceDataDriver(
+            max_angl_speed=float(self.input_max_angl_speed.text() or 0),
+            max_angl_acc=float(self.input_max_angl_acc.text() or 0),
+            max_angle_speed_wm=float(self.input_max_angle_speed_wm.text() or 0),
+            max_angle_acc_wm=float(self.input_max_angle_acc_wm.text() or 0),
+            tp=float(self.input_tp.text() or 0),
+            tp_rel=float(self.input_tp_rel.text() or 0),
+            max_stat_torque=float(self.input_max_stat_torque.text() or 0),
+            max_dyn_torque=float(self.input_max_dyn_torque.text() or 0),
+            eq_torque_intertia=float(self.input_eq_torque_intertia.text() or 0),
+            max_error=float(self.input_max_error.text() or 0))
     
     def on_click(self):
         data = self.get_input_data()

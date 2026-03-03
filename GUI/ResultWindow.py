@@ -53,16 +53,67 @@ class ResultWindow(QWidget):
     
     def _html_source_data(self):
         html = "<h2>Исходные данные для проектирования</h2>"
-        html += f"<p><b>Макс. угловая скорость:</b> {getattr(self.source_data, 'max_angl_speed', 0):.2f} рад/с<br>"
-        html += f"<b>Макс. угловое ускорение:</b> {getattr(self.source_data, 'max_angl_acc', 0):.2f} рад/с²<br>"
-        html += f"<b>Макс. угловая скорость рабочего движения:</b> {getattr(self.source_data, 'max_angle_speed_wm', 0):.2f} рад/с<br>"
-        html += f"<b>Макс. угловое ускорение рабочего движения:</b> {getattr(self.source_data, 'max_angle_acc_wm', 0):.2f} рад/с²<br>"
-        html += f"<b>Длительность разгона до макс. скорости:</b> {getattr(self.source_data, 'tp', 0):.2f} с<br>"
-        html += f"<b>Относительная длительность 'переброски' в рабочем цикле:</b> {getattr(self.source_data, 'tp_rel', 0):.2f} с<br>"
-        html += f"<b>Макс. статический момент сил:</b> {getattr(self.source_data, 'max_stat_torque', 0):.2f} Нм<br>"
-        html += f"<b>Макс. динамический момент сил:</b> {getattr(self.source_data, 'max_dyn_torque', 0):.2f} Нм<br>"
-        html += f"<b>Эквивалентный момент инерции:</b> {getattr(self.source_data, 'eq_torque_intertia', 0):.2f} кг·м²<br>"
-        html += f"<b>Макс. допустимая ошибка:</b> {getattr(self.source_data, 'max_error', 0):.2f} рад</p>"
+        html += """
+            <table border="1" style="border-collapse: collapse; width: 400px;">
+                <tr>
+                    <th style="padding: 8px; text-align: left;">Параметр</th>
+                    <th style="padding: 8px; text-align: left;">Условное обозначение</th>
+                    <th style="padding: 8px; text-align: left;">Значение</th>
+                </tr>
+            """
+        html += f"""
+                <tr>
+                    <td style="padding: 8px;"><b>Максимальная угловая скорость</b></td>
+                    <td style="padding: 8px;">ω<sub>макс</sub></td>
+                    <td style="padding: 8px;">{getattr(self.source_data, 'max_angl_speed', 0):.2f} рад/с</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><b>Максимальное угловое ускорение</b></td>
+                    <td style="padding: 8px;">a<sub>макс</sub></td>
+                    <td style="padding: 8px;">{getattr(self.source_data, 'max_angl_acc', 0):.2f} рад/с²</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><b>Максимальная угловая скорость рабочего движения</b></td>
+                    <td style="padding: 8px;">ω<sub>раб.макс</sub></td>
+                    <td style="padding: 8px;">{getattr(self.source_data, 'max_angle_speed_wm', 0):.2f} рад/с</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><b>Максимальное угловое ускорение рабочего движения</b></td>
+                    <td style="padding: 8px;">a<sub>раб.макс</sub></td>
+                    <td style="padding: 8px;">{getattr(self.source_data, 'max_angle_acc_wm', 0):.2f} рад/с²</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><b>Длительность разгона до максимальной скорости</b></td>
+                    <td style="padding: 8px;">t<sub>р</sub></td>
+                    <td style="padding: 8px;">{getattr(self.source_data, 'tp', 0):.2f} с</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><b>Относительная длительность 'переброски' в рабочем цикле</b></td>
+                    <td style="padding: 8px;">t<sub>р.отн</sub></td>
+                    <td style="padding: 8px;">{getattr(self.source_data, 'tp_rel', 0):.2f} с</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><b>Максимальный статический момент сил</b></td>
+                    <td style="padding: 8px;">M<sub>ст</sub></td>
+                    <td style="padding: 8px;">{getattr(self.source_data, 'max_stat_torque', 0):.2f} Нм</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><b>Максимальный динамический момент сил</b></td>
+                    <td style="padding: 8px;">M<sub>дин</sub></td>
+                    <td style="padding: 8px;">{getattr(self.source_data, 'max_dyn_torque', 0):.2f} Нм</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><b>Эквивалентный момент инерции</b></td>
+                    <td style="padding: 8px;">J<sub>экв</sub></td>
+                    <td style="padding: 8px;">{getattr(self.source_data, 'eq_torque_intertia', 0):.2f} кг·м²</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px;"><b>Максимальная допустимая ошибка</b></td>
+                    <td style="padding: 8px;">ε<sub>макс</sub></td>
+                    <td style="padding: 8px;">{getattr(self.source_data, 'max_error', 0):.2f} рад</td>
+                </tr>
+                """
+        html += "</table>"
         return html
     
     def _html_calculation_results(self):
