@@ -25,7 +25,7 @@ class ThermalEquivalentTorqueCalculator:
     
     def calculate_equivalent_acceleration(self) -> float:
         """Расчёт амлпитуды изменения объекта управления Аэ"""
-        return (self._source_data.max_angle_speed_wm ** 2) / self._source_data.max_angle_acc_wm
+        return (self._gear_data.i_nom * self._source_data.max_angle_speed_wm ** 2) / self._source_data.max_angle_acc_wm
     
     def calculate_omega_equivalent(self) -> float:
         """Расчёт угловой частоты изменения объекта управления omega_э"""
@@ -40,7 +40,7 @@ class ThermalEquivalentTorqueCalculator:
         """Расчет квадрата эквивалетного момента нагрузки двигателя привода"""
         time_cycle = self.calculate_time_cycle()
         time_tracking = self.calculate_time_tracking(time_cycle)
-        a_eqv = self.calculate_equivalent_acceleration()
+        a_eqv = self.calculate_equivalent_acceleration() 
         omega_eqv = self.calculate_omega_equivalent()
         torque_tracking = self.calculate_tracking_torque(a_eqv, omega_eqv)
         

@@ -1,6 +1,5 @@
 from sqlalchemy import func, select
-from DataBase.ORMModel import EngineDC, Gear
-from DataBase.repository import DatabaseRepository
+from .repository import DatabaseRepository
 from typing import Dict, Any
 
 class FindEngine(DatabaseRepository):
@@ -15,23 +14,24 @@ class FindEngine(DatabaseRepository):
         with self.Session() as session:
             stmt = (
                 select(orm_model)
-                .order_by(
-                    func.abs(orm_model.p_nom - target_value)
-                )
-                .limit(1)
+                .where(orm_model.p_nom >= target_value)
+            .order_by(
+                orm_model.p_nom - target_value  # сортируем по разнице (чем меньше, тем ближе)
             )
-            result = session.scalars(stmt).first()
-            if result:
-                d = result.__dict__.copy() 
-                d.pop('_sa_instance_state', None)  
-                return d
-            else:
-                return result
+            .limit(1)
+        )
+        result = session.scalars(stmt).first()
+        if result:
+            d = result.__dict__.copy() 
+            d.pop('_sa_instance_state', None)  
+            return d
+        else:
+            return result
             
     def find_closest_gear_i(self, orm_model, target_value, source_data, results_moment) -> Dict[str, Any]:
         """"Поиск редуктора с передаточным отношением, наиболее близким к оптимальному значению"""
         with self.Session() as session:
-            print(results_moment['torque'])
+            #print(results_moment['torque'])
             stmt = (select(orm_model)
                     .where(source_data.max_angl_speed <= orm_model.speed_norm)
                     .where(results_moment['torque'] <= orm_model.torque_nom)

@@ -52,6 +52,11 @@ class DynamicErrorCalculator:
             fourth_error=self.fourth_error,
             fifth_error=self.fifth_error
         )
+    
+    @property
+    def stat_error(self):
+        return self.first_error + self.second_error + self.third_error
+    
 
     def __str__(self):
         """

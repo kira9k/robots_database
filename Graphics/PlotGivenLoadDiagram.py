@@ -61,10 +61,10 @@ class DataGivenLoadDiagram:
     
     @property
     def coef_forcing(self):
-        print(self.max_torque_with_gear)
-        print(self.max_torque_with_gear / self.motor_data.torque_nom)
-        print(math.ceil(self.max_torque_with_gear / self.motor_data.torque_nom))
-        return math.ceil((self.max_torque_with_gear / self.motor_data.torque_nom) * 10) / 10 if self.max_torque_with_gear / self.motor_data.torque_nom > 1 else 1 
+        #print(self.max_torque_with_gear)
+        #print(self.max_torque_with_gear / self.motor_data.torque_nom)
+        #print(math.ceil(self.max_torque_with_gear / self.motor_data.torque_nom))
+        return math.ceil((self.torque_start / self.motor_data.torque_nom) * 10) / 10 if self.max_torque_with_gear / self.motor_data.torque_nom > 1 else 1 
     
     def get_result(self):
         return {

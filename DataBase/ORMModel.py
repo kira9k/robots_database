@@ -1,7 +1,68 @@
 from sqlalchemy.orm import declarative_base, relationship
-from sqlalchemy import Column, Integer, String, Float, Numeric, LargeBinary, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, Numeric, ForeignKey
 
 Base = declarative_base()
+
+class Utils(Base):
+    """Вспомогательная таблица для хранения различных параметров"""
+    __tablename__ = 'utils'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    A_e = Column(Float)
+    omega_e = Column(Float)
+    dyn_error = Column(Float)
+    stat_error = Column(Float)
+
+class CoefRegulators(Base):
+    """Коэффициенты"""
+    __tablename__ = 'coef_regulators'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    k_dc = Column(Float)
+    k_c = Column(Float)
+    k_ci = Column(Float)
+    k_ds = Column(Float)
+    k_s = Column(Float)
+    k_si = Column(Float)
+    k_da = Column(Float)
+    k_a = Column(Float)
+    k_ai = Column(Float)
+    k_pwm = Column(Float)
+    T_pwm = Column(Float)
+    k_feedforward = Column(Float)
+    #k_correct = Column(Float)
+
+class SourceData(Base):
+    """ORM модель для хранения исходных данных проектирования"""
+    __tablename__ = 'source_data'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    max_speed = Column(Float)
+    max_acc = Column(Float)
+    max_speed_work = Column(Float)
+    acc_duration = Column(Float)
+    rel_duration = Column(Float)
+    max_torque = Column(Float)
+    max_inertia_torque = Column(Float)
+    max_error = Column(Float)
+    overshoot = Column(Float)
+    transition_time = Column(Float)
+
+class Result(Base):
+    """ORM модель для хранения результатов проектирования"""
+    __tablename__ = 'result'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_engine = Column(Integer, ForeignKey('engine_dc.id'))
+    id_gear = Column(Integer, ForeignKey('gears.id'))
+    id_encoder = Column(Integer, ForeignKey('encoder.id'))
+    id_source_data = Column(Integer, ForeignKey('source_data.id'))
+    id_coef_regulators = Column(Integer, ForeignKey('coef_regulators.id'))
+    id_utils = Column(Integer, ForeignKey('utils.id'))
+
+    engine_rel = relationship('EngineDC', foreign_keys=[id_engine])
+    gear_rel = relationship('Gear', foreign_keys=[id_gear])
+    encoder_rel = relationship('Encoder', foreign_keys=[id_encoder])
+    source_data_rel = relationship('SourceData', foreign_keys=[id_source_data])
+    coef_regulators_rel = relationship('CoefRegulators', foreign_keys=[id_coef_regulators])
+    utils_rel = relationship('Utils', foreign_keys=[id_utils])
+
 
 class EngineType(Base):
     """ORM модель типа двигателя"""
@@ -21,7 +82,7 @@ class EngineCompany(Base):
 class EngineDC(Base):
     """ORM модель двигателя постоянного тока"""
     __tablename__ = 'engine_dc'
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     model = Column(String)
     p_nom = Column(Float)
     m_nom = Column(Float)
@@ -30,9 +91,11 @@ class EngineDC(Base):
     i_nom = Column(Float)
     r_nom = Column(Float)
     j_nom = Column(Float)
+    l_a = Column(Float)
+    max_current = Column(Float)
     m = Column(Float)
     price = Column(Numeric(9, 2))
-    drawing = Column(LargeBinary)
+    drawing = Column(String)
     company = Column(Integer, ForeignKey('engine_companies.id_company'))
     type_id = Column(Integer, ForeignKey('engine_types.id_engine'))
 
@@ -58,7 +121,7 @@ class GearCompany(Base):
 class Gear(Base):
     """ORM модель редуктора"""
     __tablename__ = 'gears'
-    gear_id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     gear_name = Column(String)
     gear_company = Column(Integer, ForeignKey('gear_companies.company_id'))
     gear_type = Column(Integer, ForeignKey('gear_types.type_gear_id'))
@@ -70,7 +133,7 @@ class Gear(Base):
     inertial_torque = Column(Float)
     mass = Column(Float)
     price = Column(Numeric(9, 2))
-    drawing = Column(LargeBinary)
+    drawing = Column(String)
     efficiency = Column(Float)
 
     company_rel = relationship('GearCompany')
@@ -92,7 +155,7 @@ class EncoderCompany(Base):
 class Encoder(Base):
     """ORM модель энкодера"""
     __tablename__ = 'encoder'
-    id_encoder = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     encoder_name = Column(String)
     id_company = Column(Integer, ForeignKey('company_encoder.id_company_encoder'))
     id_type_encoder = Column(Integer, ForeignKey('type_encoder.id_type'))
@@ -103,7 +166,7 @@ class Encoder(Base):
     supply_voltage = Column(Float)
     lines_count = Column(Integer)
     weight = Column(Float)
-    drawing = Column(LargeBinary)
+    drawing = Column(String)
     price = Column(Numeric(9, 2))
 
     company_rel = relationship('EncoderCompany')

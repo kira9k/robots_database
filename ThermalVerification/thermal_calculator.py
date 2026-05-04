@@ -91,6 +91,7 @@ class ThermalCalculator:
         Запускает тепловую проверку и обрабатывает результат.
         """
         
-        if not self._verification_calc.verify_torque():
-            result = self.execute_verification()
-            self._result_handler.handle(result)
+
+        result = self.execute_verification()
+        print(result)
+        return result
