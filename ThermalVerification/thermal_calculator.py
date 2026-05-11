@@ -1,14 +1,10 @@
 """Главный модуль координации тепловой проверки."""
 
-from utils.Interfaces import IGearData, ISourceData, IMotorData
 from DriverCalculation.VerificationCalculation import VerificationCalculation 
 from Graphics.PlotGivenLoadDiagram import DataGivenLoadDiagram
 
 from .calculators.thermal_torque_calculator import ThermalEquivalentTorqueCalculator
 from .strategies.motor_torque_strategy import MotorTorqueVerificationStrategy
-from .strategies.base import IThermalVerificationStrategy
-from .handlers.base import IVerificationResultHandler
-from .handlers.console_handler import ConsoleResultHandler
 from .models.verification_result import ThermalVerificationResult
 
 
@@ -18,18 +14,15 @@ class ThermalCalculator:
     """
     
     def __init__(self, 
-                 source_data: ISourceData, 
-                 motor_data: IMotorData, 
-                 gear_data: IGearData,
-                 verification_strategy: IThermalVerificationStrategy = None,
-                 result_handler: IVerificationResultHandler = None):
+                 source_data, 
+                 motor_data, 
+                 gear_data,
+                 ):
         """        
         Args:
             source_data: исходные данные
             motor_data: данные двигателя
             gear_data: данные редуктора
-            verification_strategy: стратегия проверки (опционально)
-            result_handler: обработчик результатов (опционально)
         """
         self._source_data = source_data
         self._motor_data = motor_data
@@ -47,8 +40,7 @@ class ThermalCalculator:
         self._torque_calculator = ThermalEquivalentTorqueCalculator(
             source_data, gear_data, self._given_load_diagram_data
         )
-        self._verification_strategy = verification_strategy or MotorTorqueVerificationStrategy(motor_data)
-        self._result_handler = result_handler or ConsoleResultHandler()
+        self._verification_strategy =  MotorTorqueVerificationStrategy(motor_data)
     
     def execute_verification(self) -> ThermalVerificationResult:
         """

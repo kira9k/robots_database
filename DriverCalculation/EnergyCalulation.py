@@ -1,7 +1,7 @@
-from utils.Interfaces import IPowerCalculator, ISourceData,  IMotorData, IGearData
+#from utils.Interfaces import IPowerCalculator, ISourceData,  IMotorData, IGearData
 
 
-class DCMotorPowerTorqueCalculator(IPowerCalculator):
+class DCMotorPowerTorqueCalculator():
     """
     Калькулятор мощности и момента для DC двигателя
     Пример использования:
@@ -10,7 +10,7 @@ class DCMotorPowerTorqueCalculator(IPowerCalculator):
     """
     POWER_MARGIN = 2.0
 
-    def __init__(self, source_data: ISourceData) -> None:
+    def __init__(self, source_data) -> None:
         self.source_data = source_data
 
     @property
@@ -34,7 +34,7 @@ class DCMotorPowerTorqueReCalculator(DCMotorPowerTorqueCalculator):
     Калькулятор мощности и момента для DC двигателя с учетом редуктора
     """
 
-    def __init__(self, source_data: ISourceData, gear_data: IGearData, motor_data: IMotorData) -> None:
+    def __init__(self, source_data, gear_data, motor_data) -> None:
         super().__init__(source_data)
         self.gear_data = gear_data
         self.motor_data = motor_data

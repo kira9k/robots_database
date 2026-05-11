@@ -1,11 +1,11 @@
 import math
-from utils.Interfaces import ISourceData, IMotorData
+#from utils.Interfaces import ISourceData, IMotorData
 from DriverCalculation.EnergyCalulation import DCMotorPowerTorqueCalculator
-from utils.Interfaces import IGearRatioCalculator
+#from utils.Interfaces import IGearRatioCalculator
 
 
-class GearCalulator(IGearRatioCalculator):
-    def __init__(self, source_data: ISourceData, motor_data: IMotorData):
+class GearCalulator():
+    def __init__(self, source_data, motor_data) -> None:
         self.source_data = source_data
         self.motor_data = motor_data
 

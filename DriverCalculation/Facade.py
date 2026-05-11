@@ -1,5 +1,5 @@
 from .EnergyCalulation import DCMotorPowerTorqueCalculator
-from utils.SourData import IMotorData, ISourceData, IGearData
+#from utils.SourData import IMotorData, ISourceData, IGearData
 from DataBase.repository import DatabaseRepository
 from DataBase.FindEngine import FindEngine 
 from DataBase.connection_db import engine as db_engine
@@ -13,7 +13,7 @@ class DCMotorEnergyFacade:
     Реализует принцип единой точки входа
     """
     
-    def __init__(self, source_data: ISourceData):
+    def __init__(self, source_data):
         self.source_data = source_data
         self.required_power_torque_calculator = DCMotorPowerTorqueCalculator(source_data) 
     
@@ -35,7 +35,7 @@ class DCMotorEnergyFacade:
         self.required_power_torque_calculator.POWER_MARGIN += 0.1
 
 class EncoderFacade:
-    def __init__(self, error, gear_data: IGearData):
+    def __init__(self, error, gear_data):
         self.minimal_lines_count = EncoderCalculator(error, gear_data)
 
     @property

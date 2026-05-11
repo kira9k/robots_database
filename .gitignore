@@ -8,7 +8,7 @@ chart.png
 
 slprj
 lab12_a.slxc
-image_graphic
+image_graphic/*
 
 MatlabTest/matlab_m_files/setup_param.m
 MatlabTest/matlab_m_files/responseOptimization_lab12_a.m
@@ -19,3 +19,4 @@ MatlabTest/matlab_models/untitled_2_2.mdl.original
 MatlabTest/matlab_models/lab12_a.slxc
 MatlabTest/matlab_models/untitled_2_2.mdl
 MatlabTest/matlab_m_files/lab12_a.slxc
+MatlabTest/MatlabEngine.py

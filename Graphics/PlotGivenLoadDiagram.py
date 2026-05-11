@@ -1,11 +1,12 @@
 import matplotlib.pyplot as plt
 import math
 
-from utils.Interfaces import IMotorData, IGearData, ISourceData
+#from utils.Interfaces import IMotorData, IGearData, ISourceData
 from DriverCalculation.VerificationCalculation import VerificationCalculation
 
 class DataGivenLoadDiagram:
-    def __init__(self, source_data: ISourceData, motor_data: IMotorData, gear_data: IGearData):
+    '''Класс для получения данных для  нагрузочной диаграммы'''
+    def __init__(self, source_data, motor_data, gear_data) -> None:
         self.motor_data = motor_data
         self.source_data = source_data
         self.gear_data = gear_data
@@ -61,9 +62,6 @@ class DataGivenLoadDiagram:
     
     @property
     def coef_forcing(self):
-        #print(self.max_torque_with_gear)
-        #print(self.max_torque_with_gear / self.motor_data.torque_nom)
-        #print(math.ceil(self.max_torque_with_gear / self.motor_data.torque_nom))
         return math.ceil((self.torque_start / self.motor_data.torque_nom) * 10) / 10 if self.max_torque_with_gear / self.motor_data.torque_nom > 1 else 1 
     
     def get_result(self):

@@ -91,7 +91,7 @@ class MatlabLAB2():
         
 
         self.eng.workspace['index'] = 1
-        self.value = 1000000
+        self.value = k_a
         self.eng.workspace['k_feedforward'] = 0
         self.value_ff = 0
         self.value_i = 0

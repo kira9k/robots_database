@@ -1,9 +1,9 @@
-from utils.Interfaces import ISourceData, IMotorData, IGearData
+#from utils.Interfaces import ISourceData, IMotorData, IGearData
 from DriverCalculation.EnergyCalulation import DCMotorPowerTorqueReCalculator
 import math
 
 class VerificationCalculation:
-    def __init__(self, source_data: ISourceData, motor_data: IMotorData, gear_data: IGearData):
+    def __init__(self, source_data, motor_data, gear_data) -> None:
         self.source_data = source_data
         self.motor_data = motor_data
         self.gear_data = gear_data

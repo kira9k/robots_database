@@ -1,6 +1,6 @@
 """Модуль для расчёта эквивалентного крутящего момента."""
 
-from utils.Interfaces import ISourceData, IGearData
+#from utils.Interfaces import ISourceData, IGearData
 from Graphics.PlotGivenLoadDiagram import DataGivenLoadDiagram
 
 
@@ -9,7 +9,7 @@ class ThermalEquivalentTorqueCalculator:
     Расчёт эквивалентного крутящего момента.
     """
     
-    def __init__(self, source_data: ISourceData, gear_data: IGearData, 
+    def __init__(self, source_data, gear_data, 
                  given_load_diagram_data: DataGivenLoadDiagram):
         self._source_data = source_data
         self._gear_data = gear_data

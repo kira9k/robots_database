@@ -1,12 +1,12 @@
 import math
 
 from dataclasses import dataclass
-from .Interfaces import ISourceData, IMotorData, IGearData
+#from .Interfaces import ISourceData, IMotorData, IGearData
 from DataBase.repository import DatabaseRepository
 from DataBase.ORMModel import EngineDC, Gear, Encoder, SourceData, CoefRegulators, Utils
 
 @dataclass
-class SourceDataDriver(ISourceData):
+class SourceDataDriver:
     """
     Исходные данные для расчета привода
     
@@ -45,7 +45,7 @@ class SourceDataDriver(ISourceData):
 
 
 @dataclass
-class DataDriver(IMotorData):
+class DataDriver():
     """
     Характеристики выбранного двигателя
 
@@ -71,10 +71,8 @@ class DataDriver(IMotorData):
     J: float
     m: float
     L_a: float
-    #type_motor: int
     max_current: float
     drawing: str = None
-    #k: float = 0
     
     def __post_init__(self):        
         self.k = (self.U_nom - self.I_nom * self.R) / (self.n_nom * math.pi / 30)
@@ -84,7 +82,7 @@ class DataDriver(IMotorData):
         self.company = DatabaseRepository().get_company_name(EngineDC, self.id)
 
 @dataclass
-class DataGear(IGearData):
+class DataGear():
     """
     Характеристики волнового редуктора
     
@@ -107,7 +105,6 @@ class DataGear(IGearData):
     clearance: float
     speed_norm: float
     torque_nom: float
-    #gear_type: int
     efficiency: float
     drawing: str = None
 
@@ -120,7 +117,6 @@ class DataEncoder:
 
     id: int
     name: str
-    #type_enc: int
     N: float
     m: float 
     max_speed: float
@@ -168,7 +164,6 @@ class CoefRegulators:
     k_pwm: float
     T_pwm: float
     k_feedforward: float = 0.01
-    #k_correct: float = 0.1
 
 @dataclass
 class Utils:
