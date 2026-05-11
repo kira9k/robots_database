@@ -1,7 +1,4 @@
-from abc import ABC, abstractmethod
-from utils.SourData import SourceDataDriver, DataDriver
-from utils.Interfaces import IPowerCalculator, ISourceData, IGearRatioCalculator, IMotorData, ITorqueCalculator, IGearData
-import math
+from utils.Interfaces import IPowerCalculator, ISourceData,  IMotorData, IGearData
 
 
 class DCMotorPowerTorqueCalculator(IPowerCalculator):
@@ -11,7 +8,7 @@ class DCMotorPowerTorqueCalculator(IPowerCalculator):
         calc = DCMotorPowerCalculator(source_data)
         power = calc.required_power
     """
-    POWER_MARGIN = 2.5
+    POWER_MARGIN = 2.0
 
     def __init__(self, source_data: ISourceData) -> None:
         self.source_data = source_data

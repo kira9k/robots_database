@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QWidget, QLabel, QLineEdit, QPushButton, QGroupBox, QCheckBox
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QLocale
 from PySide6.QtGui import QDoubleValidator
 
 from utils.SourData import SourceDataDriver  
@@ -19,6 +19,8 @@ class DesignWindow(QWidget):
         layout.addWidget(self.label)
 
         validator = QDoubleValidator()
+        validator.setLocale(QLocale(QLocale.English, QLocale.UnitedStates))  # принудительно точка
+
         validator.setNotation(QDoubleValidator.Notation.StandardNotation)
         validator.setBottom(0.0)
 
