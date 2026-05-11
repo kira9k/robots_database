@@ -75,6 +75,7 @@ python main.py
 Все значения описаны в `report.pdf`. При выборе `Feedforward` начнется поиск коэффициента feedforward-регулятора с помощью response optimizer (будет выполнен файл `MatlabTest/matlab_m_files/feedforward_optimize.m`).  
 При выборе `Скорректировать коэффициент` начнется поиск коррекция коэффициента П-регулятора положения с помощью response optimizer (будет выполнен файл `MatlabTest/matlab_m_files/non_linear_optimize.m`). 
 После расчётов появится окно со всеми формулами и выбранными элементами, а также графиками переходных процессов:
+
 ![Результат проектирования](assets/result_window_1.png)
 ![Результат проектирования](assets/result_window_2.png)
 
