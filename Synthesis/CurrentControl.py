@@ -1,4 +1,3 @@
-import math
 from Synthesis.LAFC import LAFC
 from Synthesis.LAFC import PWM
 

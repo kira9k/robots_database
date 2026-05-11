@@ -1,6 +1,5 @@
 """Модуль для расчёта эквивалентного крутящего момента."""
 
-#from utils.Interfaces import ISourceData, IGearData
 from Graphics.PlotGivenLoadDiagram import DataGivenLoadDiagram
 
 

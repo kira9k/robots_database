@@ -1,25 +1,22 @@
 from json import encoder
 
 from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QLabel, QMessageBox, QGroupBox
+ QMainWindow, QPushButton, QVBoxLayout, QWidget, QMessageBox, QGroupBox
 )   
 from .ResultWindow import ResultWindow
-from utils.SourData import SourceDataDriver, DataDriver, DataGear, CoefRegulators, DataEncoder
+from utils.SourData import  DataDriver, DataGear, CoefRegulators, DataEncoder
 from DriverCalculation.Facade import DCMotorEnergyFacade, FindEngineFacade, FindEncoderFacade, EncoderFacade
 from DriverCalculation.GearCalculate import GearCalulator
 from DriverCalculation.EnergyCalulation import DCMotorPowerTorqueReCalculator
-from DriverCalculation.VerificationCalculation import VerificationCalculation
 from Graphics.PlotGivenLoadDiagram import PlotLoadDiagram, DataGivenLoadDiagram
 from ThermalVerification import ThermalCalculator
-from Synthesis.dynamic_error import DynamicErrorCalculator, ErrorData
+from Synthesis.dynamic_error import DynamicErrorCalculator
 from .DesignWindow import DesignWindow
 from .TableWindow import TableWindow
-from DataBase.connection_db import engine as db_engine
 from DataBase.ORMModel import EngineDC, Gear, Encoder, Result, SourceData, Utils
 from DataBase.ORMModel import CoefRegulators as CoefRegulatorsORM
 from Synthesis.LAFC import LAFC, PWM
 from Synthesis.CurrentControl import CurrentControlPI, SpeedControlPI, PositionComtrolP
-from MatlabTest.MatlabEngine import MatlabEngine
 from MatlabTest.MatlabLAB2 import MatlabLAB2
 
 class MainWindow(QMainWindow):
@@ -69,7 +66,6 @@ class MainWindow(QMainWindow):
         # Растягивающийся элемент в конце
         main_layout.addStretch()
         
-        self.matlab_engone = MatlabEngine()
         self.matlab_lab2 = MatlabLAB2()
 
     def create_table_window(self, orm_model):
@@ -229,9 +225,7 @@ class MainWindow(QMainWindow):
             stat_error=error.stat_error
         )
 
-        #self.matlab_engone.run_simulation("untitled_2_2", sd, thermal_data, motor_data, gear_data)
         self.matlab_lab2.run_simulation("lab12_a", sd, orms_res, thermal_data, motor_data, gear_data, self.coef_regulators, flag_calc=True)
-        #self.coef_regulators.k_correct = 10000#
         self.coef_regulators.k_a = self.matlab_lab2.value
         self.coef_regulators.k_ai = self.matlab_lab2.value_i
         self.coef_regulators.k_feedforward = self.matlab_lab2.value_ff

@@ -1,7 +1,5 @@
-from .MatlabEngine import MatlabEngine
 import matplotlib.pyplot as plt
 import numpy as np
-import math
 import matlab.engine
 
 
@@ -57,13 +55,8 @@ class MatlabLAB2():
         self.eng.set_param(f'{model_name}/kdc', 'Gain', str(k_dc), nargout=0)
         self.eng.set_param(f'{model_name}/kds', 'Gain', str(k_ds), nargout=0)
 
-        #self.eng.set_param(f'{model_name}/angle_control/kp', 'Gain', str(k_a), nargout=0)
         self.eng.workspace['kp'] = k_a
-        #self.eng.set_param(f'{model_name}/angle_control/kpi', 'Gain', str(k_ai), nargout=0)
         self.eng.workspace['kpi'] = k_ai
-
-        #self.eng.set_param(f'{model_name}/angle_control1/kp', 'Gain', str(k_a), nargout=0)
-        #self.eng.set_param(f'{model_name}/angle_control1/kpi', 'Gain', str(k_ai), nargout=0)
 
         self.eng.set_param(f'{model_name}/speed_control/ks', 'Gain', str(k_s), nargout=0)
         self.eng.set_param(f'{model_name}/speed_control/ksi', 'Gain', str(k_is), nargout=0)

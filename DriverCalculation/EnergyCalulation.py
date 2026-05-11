@@ -1,6 +1,3 @@
-#from utils.Interfaces import IPowerCalculator, ISourceData,  IMotorData, IGearData
-
-
 class DCMotorPowerTorqueCalculator():
     """
     Калькулятор мощности и момента для DC двигателя

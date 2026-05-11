@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import math
 
-#from utils.Interfaces import IMotorData, IGearData, ISourceData
 from DriverCalculation.VerificationCalculation import VerificationCalculation
 
 class DataGivenLoadDiagram:

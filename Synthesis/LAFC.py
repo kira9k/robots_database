@@ -25,8 +25,6 @@ class LAFC:
         else:
             return math.ceil(math.sqrt(4 * ((self.thermal_calculator.get("omega_eqv")**2) * self.thermal_calculator.get("A_eqv"))  / (self.error_data.fourth_error * self.gear_data.i_nom)))
 
-
-        
     @property
     def _transition_duration(self):
         return self.source_data.tp / 3

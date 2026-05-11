@@ -1,7 +1,5 @@
 import math
-#from utils.Interfaces import ISourceData, IMotorData
 from DriverCalculation.EnergyCalulation import DCMotorPowerTorqueCalculator
-#from utils.Interfaces import IGearRatioCalculator
 
 
 class GearCalulator():

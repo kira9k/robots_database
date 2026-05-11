@@ -1,4 +1,3 @@
-#from utils.Interfaces import ISourceData, IMotorData, IGearData
 from DriverCalculation.EnergyCalulation import DCMotorPowerTorqueReCalculator
 import math
 

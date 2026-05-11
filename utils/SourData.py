@@ -1,9 +1,8 @@
 import math
 
 from dataclasses import dataclass
-#from .Interfaces import ISourceData, IMotorData, IGearData
 from DataBase.repository import DatabaseRepository
-from DataBase.ORMModel import EngineDC, Gear, Encoder, SourceData, CoefRegulators, Utils
+from DataBase.ORMModel import EngineDC, Gear, Encoder
 
 @dataclass
 class SourceDataDriver:

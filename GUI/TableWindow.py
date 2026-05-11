@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import (QWidget, QTableView, QVBoxLayout, QHBoxLayout, 
                                QPushButton, QMessageBox, QDialog, QFormLayout,
                                QLineEdit, QDialogButtonBox, QScrollArea, 
-                               QComboBox, QSpinBox, QDoubleSpinBox, QFileDialog)
+                               QSpinBox, QDoubleSpinBox, QFileDialog)
 from .DBModelGUI import SQLAlchemyTableModel
 from DataBase.ORMModel import CoefRegulators, EngineDC, Encoder, Gear, Result, SourceData, Utils
 from DataBase.repository import DatabaseRepository

@@ -1,6 +1,6 @@
 import yaml
 from PySide6.QtCore import QAbstractTableModel, Qt
-from DataBase.ORMModel import Encoder, EngineDC, Gear, Result, SourceData
+from DataBase.ORMModel import Encoder, EngineDC, Gear
 
 class SQLAlchemyTableModel(QAbstractTableModel):
     def __init__(self, data, columns, model_class=None):

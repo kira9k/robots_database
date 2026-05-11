@@ -1,5 +1,4 @@
 from .EnergyCalulation import DCMotorPowerTorqueCalculator
-#from utils.SourData import IMotorData, ISourceData, IGearData
 from DataBase.repository import DatabaseRepository
 from DataBase.FindEngine import FindEngine 
 from DataBase.connection_db import engine as db_engine
