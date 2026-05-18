@@ -4,9 +4,7 @@ import yaml
 import os
 
 def engine():
-    """
-    Создает и возвращает SQLAlchemy engine для подключения к базе данных PostgreSQL.
-    """
+    """Создает и возвращает SQLAlchemy engine для подключения к базе данных PostgreSQL"""
     config_path = os.path.join(os.path.dirname(__file__), '../configs/login_data.yaml')
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)

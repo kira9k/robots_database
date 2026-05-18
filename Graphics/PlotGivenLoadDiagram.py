@@ -4,7 +4,7 @@ import math
 from DriverCalculation.VerificationCalculation import VerificationCalculation
 
 class DataGivenLoadDiagram:
-    '''Класс для получения данных для  нагрузочной диаграммы'''
+    """Класс для получения данных для нагрузочной диаграммы"""
     def __init__(self, source_data, motor_data, gear_data) -> None:
         self.motor_data = motor_data
         self.source_data = source_data
@@ -14,53 +14,66 @@ class DataGivenLoadDiagram:
 
     @property
     def _acceleration_engine_with_gear(self):
+        """Расчет ускорения двигателя с учетом редуктора"""
         return self.source_data.max_angl_acc * self.gear_data.i_nom
     
     @property
     def _torque_stat_gear(self):
+        """Расчет внешнего момента на валу двигателя с учетом редуктора"""
         return self.source_data.max_stat_torque / (self.gear_data.i_nom * self.gear_data.kpd)
     
     @property
     def emf_coef(self):
+        """Расчет коэффициента ЭДС двигателя"""
         return (self.motor_data.U_nom - self.motor_data.R * self.motor_data.I_nom) / (self.motor_data.n_nom * 3.14 / 30)
     
     @property
     def launch_moment(self):
+        """Расчет пускового момента двигателя"""
         return self.motor_data.U_nom * self.emf_coef / self.motor_data.R
     
     @property
     def _j_sum(self):
+        """Расчет суммарной инерции, приведенной к валу двигателя"""
         return self.source_data.eq_torque_intertia / (self.gear_data.i_nom**2 * self.gear_data.kpd) + self.motor_data.J
 
     @property
     def _torque_dyn_gear(self):
+        """Расчет динамического момента на валу двигателя с учетом редуктора"""
         return self._j_sum * self._acceleration_engine_with_gear
     
     @property
     def torque_start(self):
+        """Расчет начального момента"""
         return self._torque_stat_gear + self._torque_dyn_gear
     
     @property   
     def torque_stop(self):
+        """Расчет тормозного момента"""
         return self._torque_stat_gear - self._torque_dyn_gear
     
     @property
     def torque_nom_with_coef(self):
+        """Расчет номинального момента с учетом коэффициента форсирования"""
         return self.motor_data.torque_nom * self.coef_forcing
     
     @property
     def torque_nom(self):
         return self.motor_data.torque_nom
+    
     @property
     def idle_speed(self):
+        """Расчет скорости холостого хода двигателя"""
         return self.motor_data.U_nom / self.emf_coef
     
     @property
     def nom_speed(self):
+        """Расчет номинальной скорости двигателя"""
         return self.motor_data.n_nom * math.pi / 30
     
     @property
     def coef_forcing(self):
+        """Расчет коэффициента форсирования"""
         return math.ceil((self.torque_start / self.motor_data.torque_nom) * 10) / 10 if self.max_torque_with_gear / self.motor_data.torque_nom > 1 else 1 
     
     def get_result(self):
@@ -83,6 +96,7 @@ class DataGivenLoadDiagram:
         }
 
 class PlotLoadDiagram:
+    """Класс для построения нагрузочной диаграммы и ОРМС двигателя"""
     def __init__(self, motor_data, source_data, gear_data):
         self.source_data = source_data
         self.motor_data = motor_data
@@ -91,6 +105,7 @@ class PlotLoadDiagram:
         self.k, self.b = self._find_line_equation(0, self.data_for_orms['idle_speed'], self.data_for_orms["torque_nom"], self.data_for_orms['nom_speed'])
     
     def _plot_points(self):
+        """Построение точек на диаграмме"""
         plt.scatter(self.data_for_orms['torque_stat_gear'], 0, label='Мст')
         plt.scatter(self.data_for_orms['torque_start'], 0, label='Ммакс')
         plt.scatter(self.data_for_orms['torque_stop'],0, label='Мторм')
@@ -101,6 +116,7 @@ class PlotLoadDiagram:
         plt.scatter(0, self.data_for_orms['max_speed_with_gear'], label=r"$\omega$max") 
     
     def _plot_lines(self):
+        """Построение линий на диаграмме"""
         plt.plot([self.data_for_orms['torque_stat_gear'], self.data_for_orms['torque_stat_gear']], [0, self.data_for_orms["max_speed_with_gear"]], 'r--')
         plt.plot([self.data_for_orms['torque_start'], self.data_for_orms['torque_start']], [0, self.data_for_orms["max_speed_with_gear"]], color='black')
         plt.plot([self.data_for_orms['torque_stop'], self.data_for_orms['torque_stop']], [0, self.data_for_orms["max_speed_with_gear"]], color='black' )

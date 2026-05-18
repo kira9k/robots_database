@@ -1,15 +1,15 @@
-from json import encoder
-
 from PySide6.QtWidgets import (
  QMainWindow, QPushButton, QVBoxLayout, QWidget, QMessageBox, QGroupBox
-)   
+)
+
+from DriverCalculation.EncoderCalculator import EncoderCalculator   
 from .ResultWindow import ResultWindow
 from utils.SourData import  DataDriver, DataGear, CoefRegulators, DataEncoder
-from DriverCalculation.Facade import DCMotorEnergyFacade, FindEngineFacade, FindEncoderFacade, EncoderFacade
-from DriverCalculation.GearCalculate import GearCalulator
-from DriverCalculation.EnergyCalulation import DCMotorPowerTorqueReCalculator
+from DataBase.FindData import FindData
+from DriverCalculation.GearCalculate import GearCalculator
+from DriverCalculation.EnergyCalulation import DCMotorPowerTorqueReCalculator, DCMotorPowerTorqueCalculator
 from Graphics.PlotGivenLoadDiagram import PlotLoadDiagram, DataGivenLoadDiagram
-from ThermalVerification import ThermalCalculator
+from DriverCalculation.ThermalCalculator import ThermalCalculator
 from Synthesis.dynamic_error import DynamicErrorCalculator
 from .DesignWindow import DesignWindow
 from .TableWindow import TableWindow
@@ -20,6 +20,7 @@ from Synthesis.CurrentControl import CurrentControlPI, SpeedControlPI, PositionC
 from MatlabTest.MatlabLAB2 import MatlabLAB2
 
 class MainWindow(QMainWindow):
+    """Главное окно"""
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Электропривод")
@@ -35,7 +36,7 @@ class MainWindow(QMainWindow):
         
         self.TableWindow = TableWindow
         
-        # Список кнопок для удобного добавления
+        # Список кнопок 
         buttons_info = [
             ("Двигателей", EngineDC),
             ("Редукторов", Gear),
@@ -63,33 +64,31 @@ class MainWindow(QMainWindow):
         
         main_layout.addWidget(design_group)
         
-        # Растягивающийся элемент в конце
         main_layout.addStretch()
-        
         self.matlab_lab2 = MatlabLAB2()
 
     def create_table_window(self, orm_model):
+        """Создание окна с таблицей для выбранной модели ORM"""
         self.table_window = self.TableWindow(orm_model)
         self.table_window.show()
 
     def create_design_window(self):
+        """Создание окна для ввода данных и расчёта параметров электропривода"""
         self.design_window = DesignWindow()
         self.design_window.data_ready.connect(self.on_design_data)
         self.design_window.show()
 
     def on_design_data(self, data):
+        """Обработка данных, полученных из окна DesignWindow, и выполнение всех расчётов"""
         sd = data
-        calculator = DCMotorEnergyFacade(sd)
+        calculator = DCMotorPowerTorqueCalculator(sd)
         while True:
-            #print(sd.__dict__)
             results = calculator.get_all_calculations()
-            print(results)
             power = results.get('power')
-            torque = results.get('torque')
 
             # Поиск двигателя в БД
-            find_engine_facade = FindEngineFacade()
-            closest_engine = find_engine_facade.find_closest_engine_power(EngineDC, power)
+            find_data_facade = FindData()
+            closest_engine = find_data_facade.find_closest_engine_power(EngineDC, power)
 
             if closest_engine:
                 motor_data = DataDriver(
@@ -113,12 +112,12 @@ class MainWindow(QMainWindow):
 
             # Редуктор
             if motor_data:
-                gear_calculator = GearCalulator(sd, motor_data)
+                gear_calculator = GearCalculator(sd, motor_data)
                 optimal_gear_ratio = getattr(gear_calculator, 'gear_ratio_optimal', None)
                 print(optimal_gear_ratio)
             else:
                 optimal_gear_ratio = None
-            closest_gear = find_engine_facade.find_closest_gear_i(Gear, optimal_gear_ratio, sd, results)
+            closest_gear = find_data_facade.find_closest_gear_i(Gear, optimal_gear_ratio, sd, results)
             gear_data = DataGear(
                 id = closest_gear["id"],
                 name=closest_gear["gear_name"],
@@ -135,6 +134,7 @@ class MainWindow(QMainWindow):
 
             dc_motor_power_Torque_Re_Calculator = DCMotorPowerTorqueReCalculator(sd, gear_data, motor_data)
 
+            # Построение ОРМС и приведённой диаграммы нагрузки
             orms = DataGivenLoadDiagram(sd, motor_data, gear_data)
             orms_res = orms.get_result()
             if orms_res["torque_start"] > motor_data.torque_nom * gear_data.kpd:
@@ -146,24 +146,25 @@ class MainWindow(QMainWindow):
             orms_chart = PlotLoadDiagram(motor_data, sd, gear_data)
             orms_chart.save_plot()
 
-            # Показать результаты в отдельном окне
             recalc_results = {
                 'required_power_with_gear': dc_motor_power_Torque_Re_Calculator.required_power_with_gear,
                 'required_torque_with_gear': dc_motor_power_Torque_Re_Calculator.required_torque_with_gear,
                 'required_speed_with_gear': dc_motor_power_Torque_Re_Calculator.required_speed_with_gear
             }
-            self.source_input_data = sd
+
+            # Тепловой расчёт
             thermal_calculator = ThermalCalculator(sd, motor_data, gear_data)
             thermal_data = thermal_calculator.get_data()
-            thermal_is_ok = thermal_calculator.run()
+            thermal_is_ok = thermal_calculator.verify()
             if not thermal_is_ok:
                 calculator.change_required_power_margin()
                 continue
             error = DynamicErrorCalculator(sd, motor_data, gear_data)
-            calculator_enc = EncoderFacade(error, gear_data)
-            results_enc = calculator_enc.get_minimal_lines_count
-            find_encoder_facade = FindEncoderFacade()
-            closest_encoder = find_encoder_facade.find_closest_encoder_lines(Encoder, results_enc, sd, gear_data)
+            
+            # Поиск энкодера в БД
+            calculator_enc = EncoderCalculator(error, gear_data)
+            results_enc = calculator_enc.dicrete_number
+            closest_encoder = find_data_facade.find_closest_encoder_lines_count_ceil(Encoder, results_enc, sd, gear_data)
             if closest_encoder is None:
                 QMessageBox.warning(self, "Предупреждение", "Не найден подходящий энкодер в базе данных.")
                 return
@@ -179,31 +180,12 @@ class MainWindow(QMainWindow):
             )
             break
 
+        # Синтез системы управления
         LAFC_calc = LAFC(motor_data, gear_data, sd, error.get_data(), orms_res, thermal_data)
         PWM_calc = PWM(motor_data, gear_data, sd, error.get_data(), orms_res, thermal_data) 
         current_control_calc = CurrentControlPI(motor_data, gear_data, sd, error.get_data(), orms_res, thermal_data) 
         speed_control_calc = SpeedControlPI(motor_data, gear_data, sd, error.get_data(), orms_res, thermal_data)
         position_control_calc = PositionComtrolP(motor_data, gear_data, sd, error.get_data(), orms_res, thermal_data, closest_encoder)
-        print(f"""Tm = {LAFC_calc._Tm}\n
-              T_e = {motor_data.T_e}\n
-              Lk = {LAFC_calc._Lk}\n 
-              freq_srez_1 = {LAFC_calc._freq_srez_1}\n
-              transition_duration = {LAFC_calc._transition_duration}\n
-              freq_srez_2 = {LAFC_calc._freq_srez_2}\n
-              freq_2 = {LAFC_calc._freq_2}\n
-              freq_srez_3 = {LAFC_calc._freq_3}\n
-              T_u = {PWM_calc.T_u}\n
-              k_pwm = {PWM_calc.k_pwm}\n
-              k_rc = {current_control_calc.k_rc}\n
-              k_osc = {current_control_calc.k_osc}\n
-              k_ric = {current_control_calc.k_ric}\n
-              k_oss = {speed_control_calc.k_oss}\n
-              k_rs = {speed_control_calc.k_rs}\n
-              k_ris = {speed_control_calc.k_ris}\n
-              k_osa = {position_control_calc.k_osa}\n
-              k_ra = {position_control_calc.k_ra}
-              k_rai = {position_control_calc.k_rai}
-              """)
         self.coef_regulators = CoefRegulators(
             k_a=position_control_calc.k_ra,
             k_da =position_control_calc.k_osa,
@@ -225,9 +207,12 @@ class MainWindow(QMainWindow):
             stat_error=error.stat_error
         )
 
+        # Моделирование
         self.matlab_lab2.run_simulation("lab12_a", sd, orms_res, thermal_data, motor_data, gear_data, self.coef_regulators, flag_calc=True)
         self.coef_regulators.k_a = self.matlab_lab2.value
         self.coef_regulators.k_ai = self.matlab_lab2.value_i
         self.coef_regulators.k_feedforward = self.matlab_lab2.value_ff
+        
+        # Отображение результатов
         self.result_window = ResultWindow(results, motor_data, optimal_gear_ratio, source_data=sd, gear=gear_data, recalc_results=recalc_results, orms_results=orms_res, thermal_data=thermal_data, error=error.get_data(), enc_min=results_enc, closest_encoder=closest_encoder_data, coef_regulators=self.coef_regulators, utils=self.utils)
         self.result_window.show()

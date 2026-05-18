@@ -1,15 +1,13 @@
 
 from DataBase.connection_db import engine
-from sqlalchemy.orm import sessionmaker, joinedload, selectinload
+from sqlalchemy.orm import sessionmaker, joinedload
 from sqlalchemy import select
 from typing import Dict, Any, List
 from DataBase.ORMModel import  EngineDC, Encoder, Gear, Result
 
 
 class DatabaseRepository():
-    """
-    ORM-репозиторий для работы с любыми таблицами.
-    """
+    """ORM-репозиторий для работы с любыми таблицами"""
     def __init__(self, session_factory=None):
         if session_factory is None:
             self.engine = engine()
@@ -30,29 +28,17 @@ class DatabaseRepository():
             return data
 
     def add(self, model, data: Dict[str, Any]) -> int:
-        """
-        Добавить запись в таблицу
-        model: класс ORM-модели
-        data: dict с параметрами
-        
-        Returns:
-            int: ID добавленной записи
-        """
+        """Добавить запись в таблицу"""
         with self.Session() as session:
             obj = model(**data)
             session.add(obj)
-            session.flush()  # Получить ID до коммита
+            session.flush()  
             obj_id = obj.id
             session.commit()
             return obj_id
             
     def update(self, model, obj_id: int, data: Dict[str, Any]) -> None:
-        """
-        Обновить запись по id
-        model: класс ORM-модели
-        obj_id: int
-        data: dict с новыми параметрами
-        """
+        """Обновить запись по id"""
         with self.Session() as session:
             obj = session.query(model).get(obj_id)
             if obj:
@@ -61,11 +47,7 @@ class DatabaseRepository():
                 session.commit()
 
     def delete(self, model, obj_id: int) -> None:
-        """
-        Удалить запись по id
-        model: класс ORM-модели
-        obj_id: int
-        """
+        """Удалить запись по id"""
         with self.Session() as session:
             obj = session.query(model).get(obj_id)
             if obj:
@@ -73,10 +55,7 @@ class DatabaseRepository():
                 session.commit()
     
     def get_data_with_relations(self, model) -> List[Dict[str, Any]]:
-        """
-        Метод для получения всех данных с связанными данными
-        """
-        
+        """Метод для получения всех данных с связанными данными"""
         with self.Session() as session:
             if model == Encoder:
                 encoders = session.query(Encoder)\
@@ -116,10 +95,7 @@ class DatabaseRepository():
         return result
             
     def get_first_data_by_id_with_relations(self, model, id: int) -> List[Dict[str, Any]]:
-        """
-        Метод для получения всех данных с связанными данными
-        """
-        
+        """Метод для получения данных по id с связанными данными"""
         with self.Session() as session:
             if model == Encoder:
                 encoders = session.query(Encoder)\
@@ -153,9 +129,7 @@ class DatabaseRepository():
                         joinedload(Result.utils_rel)
                     ).filter(Result.id == id).first()
                 result = results
-            # elif model == SourceData:
-            #     source_data = session.query(SourceData).filter(SourceData.id == id).first()
-            #     result = source_data
+
             else:
                 id_column = getattr(model, 'id')
                 result = session.query(model).filter(id_column == id).first()
@@ -202,21 +176,12 @@ class DatabaseRepository():
         return None
     
     def find_duplicate(self, model, data: Dict[str, Any]) -> int:
-        """
-        Ищет существующую запись с такими же параметрами
-        model: класс ORM-модели
-        data: dict с параметрами для поиска
-        
-        Returns:
-            int: ID существующей записи или None если не найдена
-        """
+        """Ищет существующую запись с такими же параметрами"""
         def float_equals(a, b, rel_tol=1e-3, abs_tol=1e-3):
-            """Сравнивает float числа с учётом относительной и абсолютной погрешности"""
             if a == b:
                 return True
             if abs(a - b) < abs_tol:
                 return True
-            # Относительное сравнение
             if abs(a) > abs_tol or abs(b) > abs_tol:
                 return abs(a - b) / max(abs(a), abs(b)) < rel_tol
             return False
@@ -224,13 +189,9 @@ class DatabaseRepository():
         with self.Session() as session:
             # Получаем все записи модели
             all_records = session.query(model).all()
-            
-            print(f"DEBUG: Ищу дубликат в {model.__name__}")
-            print(f"DEBUG: Всего записей в таблице: {len(all_records)}")
-            
+                        
             for record in all_records:
                 match = True
-                mismatches = []  # Для отладки - какие поля не совпали
                 
                 # Сравниваем каждое поле
                 for key, value in data.items():
@@ -243,20 +204,12 @@ class DatabaseRepository():
                     if isinstance(value, float) and isinstance(record_value, float):
                         if not float_equals(value, record_value):
                             match = False
-                            mismatches.append(f"{key}: {value} != {record_value} (diff={abs(value-record_value)})")
                     else:
                         # Для остальных типов - точное сравнение
                         if record_value != value:
-                            match = False
-                            mismatches.append(f"{key}: {value} != {record_value}")
-                
+                            match = False                
                 # Если все поля совпали - найден дубликат
                 if match:
-                    print(f"DEBUG: НАЙДЕН ДУБЛИКАТ {model.__name__} с ID {record.id}")
                     return record.id
-                else:
-                    if len(mismatches) <= 2:  # Выводим только первые 2 отличия
-                        print(f"DEBUG: Запись ID {record.id} не совпала: {', '.join(mismatches)}")
             
-            print(f"DEBUG: Дубликат не найден, будет создана новая запись")
             return None

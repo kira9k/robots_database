@@ -1,10 +1,11 @@
 from sqlalchemy.orm import declarative_base, relationship
 from sqlalchemy import Column, Integer, String, Float, Numeric, ForeignKey
 
+
 Base = declarative_base()
 
 class Utils(Base):
-    """Вспомогательная таблица для хранения различных параметров"""
+    """ORM модель для хранения различных параметров"""
     __tablename__ = 'utils'
     id = Column(Integer, primary_key=True, autoincrement=True)
     A_e = Column(Float)
@@ -13,7 +14,7 @@ class Utils(Base):
     stat_error = Column(Float)
 
 class CoefRegulators(Base):
-    """Коэффициенты"""
+    """ORM модель для хранения коэффициентов"""
     __tablename__ = 'coef_regulators'
     id = Column(Integer, primary_key=True, autoincrement=True)
     k_dc = Column(Float)
@@ -28,7 +29,6 @@ class CoefRegulators(Base):
     k_pwm = Column(Float)
     T_pwm = Column(Float)
     k_feedforward = Column(Float)
-    #k_correct = Column(Float)
 
 class SourceData(Base):
     """ORM модель для хранения исходных данных проектирования"""
@@ -42,7 +42,6 @@ class SourceData(Base):
     max_torque = Column(Float)
     max_inertia_torque = Column(Float)
     max_error = Column(Float)
-    overshoot = Column(Float)
     transition_time = Column(Float)
 
 class Result(Base):
@@ -63,13 +62,11 @@ class Result(Base):
     coef_regulators_rel = relationship('CoefRegulators', foreign_keys=[id_coef_regulators])
     utils_rel = relationship('Utils', foreign_keys=[id_utils])
 
-
 class EngineType(Base):
     """ORM модель типа двигателя"""
     __tablename__ = 'engine_types'
     id_engine = Column(Integer, primary_key=True)
     type_name = Column(String)
-
 
 class EngineCompany(Base):
     """ORM модель компании производителя двигателя"""
@@ -77,7 +74,6 @@ class EngineCompany(Base):
     id_company = Column(Integer, primary_key=True)
     name = Column(String)
     country = Column(String)
-
 
 class EngineDC(Base):
     """ORM модель двигателя постоянного тока"""
@@ -98,10 +94,8 @@ class EngineDC(Base):
     drawing = Column(String)
     company = Column(Integer, ForeignKey('engine_companies.id_company'))
     type_id = Column(Integer, ForeignKey('engine_types.id_engine'))
-
     company_rel = relationship('EngineCompany')
     engine_type = relationship('EngineType')   
-
 
 class GearType(Base):
     """ORM модель типа редуктора"""
@@ -109,14 +103,12 @@ class GearType(Base):
     type_gear_id = Column(Integer, primary_key=True)
     type_gear = Column(String)
 
-
 class GearCompany(Base):
     """ORM модель компании производителя редуктора"""
     __tablename__ = 'gear_companies'
     company_id = Column(Integer, primary_key=True)
     name_company = Column(String)
     country = Column(String)
-
 
 class Gear(Base):
     """ORM модель редуктора"""

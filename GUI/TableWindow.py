@@ -56,12 +56,10 @@ class FilePickerWidget(QWidget):
         if file_path:
             # Преобразуем абсолютный путь в относительный
             try:
-                # Получаем текущую рабочую директорию проекта
                 project_root = os.getcwd()
                 relative_path = os.path.relpath(file_path, project_root)
                 self.path_input.setText(relative_path)
             except ValueError:
-                # Если не удалось создать относительный путь, используем абсолютный
                 self.path_input.setText(file_path)
     
     def set_value(self, value):
@@ -98,7 +96,6 @@ class TableWindow(QWidget):
         self.delete_button = QPushButton("Удалить")
         
         
-        # Создаем горизонтальный layout для кнопок
         button_layout = QHBoxLayout()
         button_layout.addWidget(self.open_button)
         button_layout.addWidget(self.refresh_button)
@@ -107,20 +104,19 @@ class TableWindow(QWidget):
         button_layout.addWidget(self.delete_button)
         button_layout.addStretch()
         
-        # Основной layout (вертикальный)
         layout = QVBoxLayout()
         layout.addLayout(button_layout)
         layout.addWidget(self.table)
         self.setLayout(layout)
         
-        # Подключаем сигналы
+        # Сигналы
         self.open_button.clicked.connect(self.open_record)
         self.refresh_button.clicked.connect(self.load_data)
         self.add_button.clicked.connect(self.add_record)
         self.edit_button.clicked.connect(self.edit_record)
         self.delete_button.clicked.connect(self.delete_record)
         
-        # Загружаем данные
+        # Загрузка данных
         self.load_data()
     
     def get_selected_record_id(self):
@@ -262,18 +258,13 @@ class TableWindow(QWidget):
             
             # Получаем данные через репозиторий
             data = self.repository.get_data_with_relations(orm_model)
-            self.current_data = data
-            
-            # Получаем колонки
+            self.current_data = data            
             columns = [col.name for col in orm_model.__table__.columns]
+            
             # Создаем модель для таблицы, передавая класс модели
             model = SQLAlchemyTableModel(data, columns, model_class=orm_model) 
             self.table.setModel(model)
-            
-            # Настраиваем выделение строк
             self.table.setSelectionBehavior(QTableView.SelectRows)
-            
-            # Настраиваем ширину колонок
             self.table.resizeColumnsToContents()
             
         except Exception as e:
@@ -290,7 +281,6 @@ class TableWindow(QWidget):
                 
                 # Используем метод add из репозитория
                 self.repository.add(self.ORM_Model, data)
-                
                 QMessageBox.information(self, "Успех", "Запись успешно добавлена")
                 self.load_data()  # Обновляем таблицу
                 
@@ -326,7 +316,6 @@ class TableWindow(QWidget):
                 
                 # Используем метод update из репозитория
                 self.repository.update(self.ORM_Model, record_id, data)
-                
                 QMessageBox.information(self, "Успех", "Запись успешно обновлена")
                 self.load_data()  # Обновляем таблицу
                 
@@ -349,7 +338,6 @@ class TableWindow(QWidget):
             try:
                 # Используем метод delete из репозитория
                 self.repository.delete(self.ORM_Model, record_id)
-                
                 QMessageBox.information(self, "Успех", "Запись успешно удалена")
                 self.load_data()  # Обновляем таблицу
                 
@@ -524,9 +512,6 @@ class AddItemDialog(QDialog):
     """Диалог для добавления новой компании или типа"""
     
     def __init__(self, item_type, parent=None):
-        """
-        item_type: 'company' или 'type'
-        """
         super().__init__(parent)
         self.item_type = item_type
         self.result_data = None
@@ -575,20 +560,14 @@ class AddItemDialog(QDialog):
                 QMessageBox.warning(self, "Ошибка", "Название компании обязательно!")
                 return
             
-            self.result_data = {
-                'name': name,
-                'country': country if country else None
-            }
+            self.result_data = {'name': name,'country': country if country else None}
         else:  # type
             name = self.name_input.text().strip()
             if not name:
                 QMessageBox.warning(self, "Ошибка", "Название типа обязательно!")
                 return
             
-            self.result_data = {
-                'name': name
-            }
-        
+            self.result_data = {'name': name}
         self.accept()
     
     def get_result(self):

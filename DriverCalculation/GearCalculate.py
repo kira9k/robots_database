@@ -1,8 +1,8 @@
 import math
 from DriverCalculation.EnergyCalulation import DCMotorPowerTorqueCalculator
 
-
-class GearCalulator():
+class GearCalculator():
+    """Класс для расчета оптимального передаточного отношения редуктора"""
     def __init__(self, source_data, motor_data) -> None:
         self.source_data = source_data
         self.motor_data = motor_data

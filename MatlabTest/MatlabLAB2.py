@@ -4,35 +4,31 @@ import matlab.engine
 
 
 class MatlabLAB2():
+    """Класс для взаимодействия с MATLAB и запуска симуляций"""
     def __init__(self):
         self.eng = matlab.engine.start_matlab()
         self.eng.addpath(r'MatlabTest\matlab_models', nargout=0)
 
     def run_simulation(self, model_name, sd, orms_res, thermal_data, motor_data, gear_data, coef_regulators, flag_calc=False):
-        i_gear = getattr(gear_data, 'i_nom', 0)
-        clearence = getattr(gear_data, 'clearance', 0)
+        """Запуск симуляции в MATLAB с заданными параметрами"""
         
+        # Получение необходимых параметров из переданных данных
+        clearence = getattr(gear_data, 'clearance', 0)
         j_a = orms_res.get("j_sum", 0)
         t_e = getattr(motor_data, 'T_e', 0)
         km = getattr(motor_data, 'k', 0)
         ra = getattr(motor_data, 'R', 0)
-
         m_ext = orms_res.get("torque_stat_gear")
-
         t_sh = getattr(coef_regulators, 'T_pwm', 0)
         k_sh = getattr(coef_regulators, 'k_pwm', 0)
-
         k_ds = getattr(coef_regulators, 'k_ds', 0)
         k_s = getattr(coef_regulators, 'k_s', 0)
         k_is = getattr(coef_regulators, 'k_si', 0)
-
         k_dc = getattr(coef_regulators, 'k_dc', 0)
         k_c = getattr(coef_regulators, 'k_c', 0)
         k_ic = getattr(coef_regulators, 'k_ci', 0)
-
         k_a = getattr(coef_regulators, 'k_a', 0)
         k_ai = getattr(coef_regulators, 'k_ai', 0)
-        
         try:
             a_eqv = thermal_data.get('A_eqv', 0)
             omega_eqv = thermal_data.get('omega_eqv', 0)
@@ -47,48 +43,43 @@ class MatlabLAB2():
 
         self.eng.load_system(model_name, nargout=0)
         print(f"Запуск симуляции {model_name}...")
-
+        
+        # Установка параметров в модели MATLAB
         self.eng.set_param(f'{model_name}/Input_signals/a_eqv', 'Value', str(a_eqv), nargout=0)
         self.eng.set_param(f'{model_name}/Input_signals/omega_eqv', 'Value', str(omega_eqv), nargout=0)
-        
         self.eng.eval(f"assignin('base', 'kdc', {k_dc})", nargout=0)
         self.eng.set_param(f'{model_name}/kdc', 'Gain', str(k_dc), nargout=0)
         self.eng.set_param(f'{model_name}/kds', 'Gain', str(k_ds), nargout=0)
-
         self.eng.workspace['kp'] = k_a
         self.eng.workspace['kpi'] = k_ai
-
         self.eng.set_param(f'{model_name}/speed_control/ks', 'Gain', str(k_s), nargout=0)
         self.eng.set_param(f'{model_name}/speed_control/ksi', 'Gain', str(k_is), nargout=0)
-
         self.eng.set_param(f'{model_name}/current_control/kc', 'Gain', str(k_c), nargout=0)
         self.eng.set_param(f'{model_name}/current_control/kci', 'Gain', str(k_ic), nargout=0)    
-
         self.eng.set_param(f'{model_name}/DC/T_pwm', 'Denominator', f"[{str(t_sh)} 1]", nargout=0)
         self.eng.set_param(f'{model_name}/DC/T_pwm', 'Numerator', f"{str(k_sh)}", nargout=0)
-        
         self.eng.set_param(f'{model_name}/DC/dc', 'Numerator', f"{str(1/ra)}", nargout=0)
         self.eng.set_param(f'{model_name}/DC/dc', 'Denominator', f"[{str(t_e)} 1]", nargout=0)
-
         self.eng.set_param(f'{model_name}/DC/j_d', 'Denominator', f"[{str(j_a)} 0]", nargout=0)
-
         self.eng.set_param(f"{model_name}/DC/ke", 'Gain', str(km), nargout=0)
         self.eng.set_param(f'{model_name}/DC/km', 'Gain', str(km), nargout=0)
-
         self.eng.set_param(f'{model_name}/Mext', 'Value', str(m_ext), nargout=0)
-
         self.eng.set_param(f'{model_name}/backlash', 'BacklashWidth', str(clearence), nargout=0)
-
-        path_to_func = r'D:\master_dis\robots_database\MatlabTest\matlab_m_files'
+        
+        # Добавление пути к функциям оптимизации в MATLAB
+        path_to_func = r'MatlabTest\matlab_m_files'
+        
         self.eng.addpath(path_to_func, nargout=0)
         
-
+        # Установка индекса для задающего воздейсвтия
         self.eng.workspace['index'] = 1
+        
         self.value = k_a
         self.eng.workspace['k_feedforward'] = 0
         self.value_ff = 0
         self.value_i = 0
         
+        # Если включена оптимизация, запускаем соответствующие функции в MATLAB
         if sd.non_linear_correction and flag_calc:
             self.eng.set_param(model_name, 'StopTime', '1', nargout=0)
             self.eng.set_param(model_name, 'StartTime', '0', nargout=0)
@@ -110,6 +101,7 @@ class MatlabLAB2():
             self.eng.workspace['kp'] = coef_regulators.k_a
             self.eng.workspace['kpi'] = coef_regulators.k_ai
 
+        # Если включена оптимизация feedforward, запускаем соответствующую функцию в MATLAB
         if sd.feedforward and flag_calc:
             self.eng.set_param(model_name, 'StopTime', '3', nargout=0)
             self.eng.set_param(model_name, 'StartTime', '0', nargout=0)
@@ -126,12 +118,10 @@ class MatlabLAB2():
         elif not flag_calc:
             self.eng.workspace['k_feedforward'] = coef_regulators.k_feedforward
 
-
-            
-
+        # Запуск симуляции для разных типов задающего воздействия
+        # Индекс 1 - ступенчатое воздействие, 2 - нарастающее, 3 - импульсное, 4 - гармоническое
         self.eng.workspace['index'] = 3
 
-        
         self.eng.set_param(model_name, 'StopTime', '10', nargout=0)
         self.eng.set_param(model_name, 'StartTime', '0', nargout=0)
         self.eng.eval(f"sim('{model_name}')", nargout=0)
@@ -174,9 +164,11 @@ class MatlabLAB2():
         self.angle_esc= np.array(self.eng.eval("ans.angle.signals.values")).flatten()
         self.input_esc = np.array(self.eng.eval("ans.input.signals.values")).flatten()
         
+        # Сохранение графиков результатов симуляции
         self.plot_angle()
     
     def plot_angle(self):
+        """Сохранение графиков угла поворота и ошибки для разных типов задающего воздействия"""
         plt.figure(figsize=(12, 8))
 
         plt.subplot(4, 2, 1)

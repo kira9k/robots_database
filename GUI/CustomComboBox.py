@@ -1,17 +1,11 @@
-# GUI/CustomComboBox.py
 from PySide6.QtWidgets import QComboBox, QMessageBox
 from PySide6.QtCore import Signal
 
 class AddableComboBox(QComboBox):
     """QComboBox с возможностью добавления нового элемента"""
-    
     item_added = Signal(object)  # Сигнал о добавлении нового элемента
     
     def __init__(self, parent=None, data_loader=None, model_type=None, field_type=None):
-        """
-        model_type: 'engine', 'gear', 'encoder'
-        field_type: 'company' или 'type'
-        """
         super().__init__(parent)
         self.data_loader = data_loader
         self.model_type = model_type
@@ -75,14 +69,12 @@ class AddableComboBox(QComboBox):
                 else:  # type
                     return self.data_loader.add_encoder_type(data['name'])
         except Exception as e:
-            print(f"Ошибка при добавлении в БД: {e}")
             raise e
         
         return None
     
     def _refresh_items(self):
         """Обновляет список элементов"""
-        # Блокируем сигналы, чтобы не вызывать лишние обновления
         self.blockSignals(True)
         
         # Сохраняем текущий выбранный элемент
@@ -112,11 +104,9 @@ class AddableComboBox(QComboBox):
                     self.setCurrentIndex(i)
                     break
         elif self.count() > 0:
-            # Если ничего не выбрано, выбираем первый элемент (если это не "Добавить новый")
             if self.itemData(0) is not None:
                 self.setCurrentIndex(0)
         
-        # Разблокируем сигналы
         self.blockSignals(False)
     
     def _load_items(self):

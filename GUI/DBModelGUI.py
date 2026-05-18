@@ -49,15 +49,6 @@ class SQLAlchemyTableModel(QAbstractTableModel):
                 if col_name == "gear_type":
                     return str(row.type_rel.type_gear) if row.type_rel else ""
                     
-            # Обработка связанных полей для Result
-            # elif isinstance(row, Result):
-            #     if col_name == "id_engine":
-            #         return str(row.engine_rel.model) if row.engine_rel else ""
-            #     if col_name == "id_gear":
-            #         return str(row.gear_rel.gear_name) if row.gear_rel else ""
-            #     if col_name == "id_encoder":
-            #         return str(row.encoder_rel.encoder_name) if row.encoder_rel else ""
-
             # по умолчанию — обычное поле модели
             value = getattr(row, col_name, "")
             return str(value) if value is not None else ""

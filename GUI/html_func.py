@@ -1,3 +1,4 @@
+import math
 import os
 
 def html_source_data(source_data):
@@ -338,4 +339,162 @@ def html_utils_data(utils):
 def html_matlab_test():
         html = f"""<h3>Моделирование электропривода</h3><br>"""
         html += f"""<img src="{os.path.join(os.getcwd(), 'image_graphic', 'angle_plot.png')}"></p><br>"""
+        return html
+
+
+def html_calculation_results(source_data, results):
+        html = "<h2>Расчетные результаты</h2>"
+        html += f"""
+                <h3>Максимальный момент</h3>
+                <p>M<sub>макс</sub> = M<sub>ст</sub> + M<sub>дин</sub> = 
+                {getattr(source_data, 'max_stat_torque', 0)} + {getattr(source_data, 'max_dyn_torque', 0)} = 
+                {results.get('torque', 0):.2f} Нм</p>
+                """
+        html += f"""
+                <h3>Максимальная мощность</h3>
+                <p>P<sub>макс</sub> = M<sub>макс</sub> * ω<sub>макс</sub> = 
+                {results.get('torque', 0):.2f} * {getattr(source_data, 'max_angl_speed', 0):.2f} = {results.get('original_power', 0):.2f} Вт</p>
+        """
+        return html
+
+def html_required_power(source_data, results):
+        html = f"""
+                <h3>Требуемая мощность с двигателя</h3>
+                <p>P<sub>треб</sub> = P<sub>макс</sub> * (2,5...3) = 
+                {results.get('original_power', 0):.2f} * {results.get('power_margin', 0):.2f} = 
+                {results.get('power', 0):.2f} Вт</p>
+                """
+        return html
+
+def html_optimal_gear_ratio(results, source_data, motor, gear_ratio):
+        html = f"""<h3>Оптимальное передаточное отношение</h3>
+                        <p>i<sub>opt</sub> = 
+                        √(P<sub>макс</sub> / (J<sub>дв</sub> * ω<sub>макс</sub> * a<sub>макс</sub>)) =
+                        √({results.get('original_power', 0):.2f} / ({getattr(motor, 'J', ''):.7f} * {getattr(source_data, 'max_angl_speed', 0):.2f} * {getattr(source_data, 'max_angl_acc', 0):.2f})) = 
+                        {gear_ratio:.2f}</p>
+                    """
+        return html
+
+def html_check_motor(source_data, results, gear, motor, recalc_results):
+        html = "<h3>Проверка правильности выбора двигателя</h3>"
+        html += f"""Проверка по моменту:<br>
+                    M<sub>треб</sub> = M<sub>макс</sub> / (η * i<sub>р</sub>) = 
+                    {results.get('torque', 0):.2f} / ({gear.efficiency:.2f} * {gear.i_nom:.2f}) = 
+                    {recalc_results.get('required_torque_with_gear', 0):.2f} Нм &le; M<sub>ном</sub> = {getattr(motor, 'torque_nom', '')} Нм<br><br>
+        """
+        html += f"""Проверка по частоте вращения:<br>
+                    ω<sub>треб</sub> = ω<sub>макс</sub> * i<sub>р</sub> = 
+                    {getattr(source_data, 'max_angl_speed', 0):.2f} * {gear.i_nom:.2f} = 
+                    {recalc_results.get('required_speed_with_gear', 0):.2f} рад/с &le; ω<sub>ном</sub> = {getattr(motor, 'n_nom', 0) * math.pi / 30:.2f} рад/с<br>
+                """
+        return html
+
+def html_orms(motor, source_data, gear, orms_results):
+        html = f"""<h3>Построение области располагаемых моментов и скоростей и приведенной диаграммы нагрузки привода</h3>"""
+        html += f"""J<sub>сум</sub> = J<sub>дв</sub> + J<sub>экв.прив</sub> = 
+                J<sub>дв</sub> + J<sub>экв</sub> / (i<sub>р</sub><sup>2</sup> * η) = 
+                {getattr(motor, 'J', ''):.5f} + {getattr(source_data, 'eq_torque_intertia', 0):.5f} / ({gear.i_nom}<sup>2</sup> * {gear.efficiency}) =
+                {orms_results.get('j_sum', 0):.7f} кг·м²<br>
+                a<sub>дв.макс</sub> = i<sub>р</sub> * a<sub>макс</sub> = 
+                {gear.i_nom} * {getattr(source_data, 'max_angl_acc', 0):.2f} =
+                {orms_results.get('acceleration_engine_with_gear', 0):.2f} рад/с²<br>
+                M<sub>ст.прив</sub> = M<sub>ст</sub> / (i<sub>р</sub> * η) = 
+                {getattr(source_data, 'max_stat_torque', 0):.2f} / {gear.i_nom} * {gear.efficiency}) =
+                {orms_results.get('torque_stat_gear', 0):.2f} Нм<br>
+                M<sub>дин.прив</sub> = J<sub>сум</sub> * a<sub>дв.макс</sub> = 
+                {orms_results.get('j_sum', 0):.7f} * {orms_results.get('acceleration_engine_with_gear', 0):.2f} =
+                {orms_results.get('torque_dyn_gear', 0):.2f} Нм<br>
+                M<sub>разог</sub> = M<sub>ст.прив</sub> + M<sub>дин.прив</sub> = 
+                {orms_results.get('torque_stat_gear', 0):.2f} + {orms_results.get('torque_dyn_gear', 0):.2f} = 
+                {orms_results.get('torque_start', 0):.2f} Нм <br>
+                M<sub>торможение</sub> = M<sub>ст.прив</sub> - M<sub>дин.прив</sub> = 
+                {orms_results.get('torque_stat_gear', 0):.2f} - {orms_results.get('torque_dyn_gear', 0):.2f} = 
+                {orms_results.get('torque_stop', 0):.2f} Нм<br>
+                k<sub>e</sub> = (U<sub>я</sub> - I<sub>я</sub> * R<sub>я</sub>) / (n<sub>ном</sub> * π / 30) =
+                ({getattr(motor, 'U_nom', 0):.2f} - {getattr(motor, 'I_nom', 0):.2f} * {getattr(motor, 'R', 0):.2f}) / ({getattr(motor, 'n_nom', 0) * math.pi / 30:.2f}) =
+                {orms_results.get('emf_coef', 0):.2f} В * c/рад<br>
+                ω<sub>д.хх</sub> = U<sub>я</sub> / k<sub>e</sub> = 
+                {getattr(motor, 'U_nom', 0):.2f} / {orms_results.get('emf_coef', 0):.2f} =
+                {orms_results.get('idle_speed', 0):.2f} рад/с</p>
+                <h4>Коэффициент форсирования</h4>
+                    <p>λ = M<sub>макс</sub> / M<sub>ном</sub><br> 
+                    λ = {orms_results.get('torque_start', 0):.2f} / {getattr(motor, 'torque_nom', '')} = 
+                    {orms_results.get('torque_start', 0) / getattr(motor, 'torque_nom', 1):.2f}<br>
+                    Принимаем λ = {orms_results.get('coef_forcing', 0):.2f}</p>
+                <p>Приведенная диаграмма нагрузки и ОРМС представлены ниже и содержит следующие характерные точки:<br>
+                - M<sub>ст.прив</sub> = {orms_results.get('torque_stat_gear', 0):.2f} Нм<br>
+                - M<sub>дин.прив</sub> = {orms_results.get('torque_dyn_gear', 0):.2f} Нм<br>
+                - M<sub>разгон</sub> = {orms_results.get('torque_start', 0):.2f} Нм<br>
+                - M<sub>торможение</sub> = {orms_results.get('torque_stop', 0):.2f} Нм<br>
+                - ω<sub>д.хх</sub> = {orms_results.get('idle_speed', 0):.2f} рад/с<br>
+                - ω<sub>ном</sub> = {getattr(motor, 'n_nom', 0) * math.pi / 30:.2f} рад/с<br>
+                - ω<sub>треб</sub> = {orms_results.get('required_speed_with_gear', 0):.2f} рад/с<br>
+                - M<sub>ном</sub> * λ = {orms_results.get('torque_nom_with_coef', 0):.2f} Нм<br></p>
+                """
+        html += f"""График приведенной диаграммы нагрузки и ОРМС представлен ниже:<br>"""
+        html += f"""<img src="{os.path.join(os.getcwd(), 'image_graphic', 'chart.png')}"></p><br>"""
+        return html
+
+def html_thermal_calc(source_data, orms_results, thermal_data, motor, gear):
+        html = f"""<h3>Тепловой расчет</h3>"""
+        html += f"""<h4>Метод эквивалентного момента</h4>"""
+        html += f"""<p>Условие выполнения: M<sub>дв.экв</sub><sup>2</sup> &le; M<sub>ном</sub><sup>2</sup><br>
+                M<sub>дв.экв</sub><sup>2</sup> = 1/t<sub>ц</sub>(∫<sub>0</sub><sup>t<sub>ц</sub></sup> M<sub>дв</sub><sup>2</sup>(t) dt)<br>
+                t<sub>ц</sub> = (t<sub>разг</sub> + t<sub>торм</sub>) / T<sub>пер.отн</sub> = 
+                {getattr(source_data, 'tp', 0)} + {getattr(source_data, 'tp', 0)} / {getattr(source_data, 'tp_rel', 0)} = 
+                {thermal_data.get('t_cycle', 0):.2f} с<br>
+                t<sub>сл</sub> = t<sub>ц</sub> * (1 - T<sub>пер.отн</sub>) = 
+                {thermal_data.get('t_cycle', 0):.2f} * (1 - {getattr(source_data, 'tp_rel', 0)}) =
+                {thermal_data.get('t_s', 0):.2f} с<br>
+                A<sub>экв</sub> = (ω<sub>макс.раб</sub><sup>2</sup>) / a<sub>макс.раб</sub> = 
+                ({getattr(source_data, 'max_angle_speed_wm', 0):.2f}<sup>2</sup>) / {getattr(source_data, 'max_angle_acc_wm', 0):.2f} =
+                {thermal_data.get('A_eqv', 0):.2f}<br>
+                ω<sub>экв</sub> = a<sub>макс.раб</sub> / ω<sub>макс.раб</sub> = 
+                {getattr(source_data, 'max_angle_acc_wm', 0):.2f} / {getattr(source_data, 'max_angle_speed_wm', 0):.2f} = 
+                {thermal_data.get('omega_eqv', 0):.2f} рад/с<br>
+                M<sub>сл</sub> = M<sub>ст1</sub> + M<sub>дин1</sub> = 
+                M<sub>ст</sub> / (i<sub>р</sub> * η) + (J<sub>сум</sub> * A<sub>экв</sub> * ω<sub>экв</sub><sup>2</sup>) = 
+                {getattr(source_data, 'max_stat_torque', 0):.2f} / ({getattr(gear, 'i_nom', 0)} * {getattr(gear, 'efficiency', 0)}) + 
+                ({getattr(orms_results, 'j_sum', 0):.7f} * {thermal_data.get('A_eqv', 0):.2f} * {thermal_data.get('omega_eqv', 0):.2f}<sup>2</sup>) =
+                {thermal_data.get('M_c', 0):.2f} Нм<br>
+                M<sub>дв.экв</sub><sup>2</sup> = 1/t<sub>ц</sub>(M<sub>разгон</sub><sup>2</sup> * t<sub>разг</sub> + M<sub>торм</sub><sup>2</sup> * t<sub>торм</sub> + M<sub>сл</sub><sup>2</sup> * t<sub>сл</sub>) =
+                1/{thermal_data.get('t_cycle', 0):.2f} * ({orms_results.get('torque_start', 0):.2f}<sup>2</sup> * {getattr(source_data, 'tp', 0):.2f} + 
+                {orms_results.get('torque_stop', 0):.2f}<sup>2</sup> * {getattr(source_data, 'tp', 0):.2f} + 
+                {thermal_data.get('M_c', 0):.2f}<sup>2</sup> * {thermal_data.get('t_s', 0):.2f}) = 
+                {thermal_data.get('M_eqv_square', 0):.2f} Нм<br>
+                Таким образом,<br>
+                M<sub>дв.экв</sub><sup>2</sup> = {thermal_data.get('M_eqv_square', 0):.2f} Нм &le; M<sub>ном</sub><sup>2</sup> = {getattr(motor, 'torque_nom', 0)**2:.2f} Нм<br>
+                """
+        return html
+
+def html_encoder_calc(source_data, error, gear):
+        html = f"""<h3>Расчет параметров энкодера</h3>"""
+        html += f"""<h4>Анализ точности привода</h4>"""
+        html += f"""<p>Условие выполнения:<br>
+                δ<sub>доп</sub> &ge; δ<sub>макс</sub> <br>
+                δ<sub>макс</sub> = δ<sub>1</sub> + δ<sub>2</sub> + δ<sub>3</sub> + δ<sub>4</sub> + δ<sub>5</sub> = 
+                M<sub>вн.макс</sub>/C + σ/2 + Δ<sub>датч</sub> + δ<sub>д.дин</sub> + δ<sub>д.м</sub> <br>
+                Будем считать, что система управления манипулятором обеспечивает вычисление моментов нагрузки и формирование корректирующих воздействий, 
+                которые на 95% компенсируют погрешность привода, обусловленную упругой податливостью редуктора <br>
+                δ<sub>1.доп</sub> = 0.05 * {getattr(source_data, 'max_stat_torque', 0):.2f} / {getattr(gear, 'c', 0):.2f} = {getattr(error, 'first_error', 0):.8f} рад<br>
+                δ<sub>2.доп</sub> = σ/2 = {getattr(gear, 'clearance', 0):.8f}/2 = {getattr(error, 'second_error', 0):.8f} рад<br>
+                Считаем, что внешний момент изменяется настолько медленно, что динамическая ошибка, вызванная изменением момента, также равна нулю<br>
+                δ<sub>5.доп</sub> = 0 рад<br>
+                δ<sub>3.доп</sub> + δ<sub>4.доп</sub> = δ<sub>доп</sub> - δ<sub>1.доп</sub> - δ<sub>2.доп</sub> - δ<sub>5.доп</sub> = 
+                {getattr(source_data, 'max_error', 0):.2f} - {getattr(error, 'first_error', 0):.8f} - {getattr(error, 'second_error', 0):.8f} - 0 =
+                {getattr(error, 'third_fourth_error', 0):.8f} рад<br>
+                Из соображений обеспечения точности привода целесообразно принять δ<sub>3.доп</sub> &lt; &lt; δ<sub>4.доп</sub> <br>
+                δ<sub>3.доп</sub>= 0.05 * δ<sub>4.доп</sub><br>
+                δ<sub>3.доп</sub> = {getattr(error, 'third_error', 0):.8f} рад<br>
+                δ<sub>4.доп</sub> = {getattr(error, 'fourth_error', 0):.8f} рад<br>
+                """
+        return html
+
+def html_found_encoder(closest_encoder, error, gear, enc_min):
+        html= f"""<h4>Подбор энкодера</h4>"""
+        html += f"""<p>Условие выполнения:<br>
+                Δ<sub>датч</sub> = 2π / (N<sub>датч</sub> * 4) &le; δ<sub>3.доп</sub> * i<sub>ред</sub><br>
+                N<sub>имп.треб</sub> &ge; π / (2 * δ<sub>3.доп</sub> * i<sub>ред</sub>) = π / (2 * {getattr(error, 'third_error', 0):.8f} * {getattr(gear, 'i_nom', 0):.2f}) = {enc_min} дискрет/об<br>
+                 <h4>Выбранный энкодер</h4>
+        """
         return html

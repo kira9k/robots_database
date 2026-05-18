@@ -8,10 +8,11 @@ class ErrorData:
     third_error: float
     third_fourth_error: float
     fourth_error: float
-    fifth_error: float
+    fifth_error: float = 0
 
 
 class DynamicErrorCalculator:
+    """Класс для расчета ошибок привода."""
     def __init__(self, source_data, motor_data, gear_data):
         self.source_data = source_data
         self.motor_data = motor_data
@@ -19,29 +20,29 @@ class DynamicErrorCalculator:
 
     @property
     def first_error(self):
-        #sum_torque = (self.source_data.max_stat_torque + self.source_data.max_dyn_torque) 
+        """Расчет первой допустимой ошибки, связанной с жесткостью редуктора"""
         first_error = 0.05 * self.source_data.max_stat_torque / (self.gear_data.kpd*self.gear_data.c)
         return first_error
 
     @property
     def second_error(self):
+        """Расчет второй допустимой ошибки, связанной с люфтом в редукторе"""
         return self.gear_data.clearance / 2
     
     @property
     def third_plus_fourth_error(self):
+        """Расчет суммы третьей и четвертой допустимых ошибок, связанных с энкодеров и динамическими характеристиками системы"""
         return self.source_data.max_error - self.first_error - self.second_error
 
     @property
     def third_error(self):
+        """Расчет третьей допустимой ошибки, связанной с разрешающей способностью энкодера"""
         return self.third_plus_fourth_error * 0.05
     
     @property
     def fourth_error(self):
+        """Расчет динамической допустимой ошибки"""
         return self.third_plus_fourth_error * 0.95
-
-    @property
-    def fifth_error(self):
-        return 0 
     
     def get_data(self):
         return ErrorData(
@@ -50,28 +51,12 @@ class DynamicErrorCalculator:
             third_error=self.third_error,
             third_fourth_error=self.third_plus_fourth_error,
             fourth_error=self.fourth_error,
-            fifth_error=self.fifth_error
         )
     
     @property
     def stat_error(self):
+        """Расчет статической ошибки"""
         return self.first_error + self.second_error + self.third_error
     
-
-    def __str__(self):
-        """
-        Возвращает строковое представление объекта с информацией об ошибках.
-        """
-        total_error = (self.first_error + self.second_error + self.third_error + 
-                       self.fourth_error + self.fifth_error)
-
-        return (
-            f'Первая допустимая ошибка: {self.first_error}\n'
-            f'Вторая допустимая ошибка: {self.second_error}\n'
-            f'Третья допустимая ошибка: {self.third_error}\n'
-            f'Четвертая допустимая ошибка: {self.fourth_error}\n'
-            f'Пятая допустимая ошибка: {self.fifth_error}\n'
-            f'Суммарная допустимая ошибка: {total_error}'
-        )
 
 

@@ -2,16 +2,12 @@ from DriverCalculation.EnergyCalulation import DCMotorPowerTorqueReCalculator
 import math
 
 class VerificationCalculation:
+    """Класс для верификации расчетов скорости и момента с учетом редуктора"""
     def __init__(self, source_data, motor_data, gear_data) -> None:
         self.source_data = source_data
         self.motor_data = motor_data
         self.gear_data = gear_data
-        self.required_torque = DCMotorPowerTorqueReCalculator(self.source_data, self.gear_data, self.motor_data).required_torque_with_gear
-
-    @property
-    def max_torque_with_gear(self) -> float:
-        """Максимальный момент двигателя с учетом редуктора"""
-        return self.required_torque#self.motor_data.J * self.source_data.max_angl_acc * self.gear_data.i_nom + self.required_torque / self.gear_data.i_nom
+        self.max_torque_with_gear = DCMotorPowerTorqueReCalculator(self.source_data, self.gear_data, self.motor_data).required_torque_with_gear
 
     @property
     def max_speed_with_gear(self) -> float:

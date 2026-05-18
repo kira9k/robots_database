@@ -1,10 +1,5 @@
 class DCMotorPowerTorqueCalculator():
-    """
-    Калькулятор мощности и момента для DC двигателя
-    Пример использования:
-        calc = DCMotorPowerCalculator(source_data)
-        power = calc.required_power
-    """
+    """Калькулятор мощности и момента для DC двигателя"""
     POWER_MARGIN = 2.0
 
     def __init__(self, source_data) -> None:
@@ -25,12 +20,25 @@ class DCMotorPowerTorqueCalculator():
         """Расчет требуемой мощности привода"""
         return self.max_power * self.POWER_MARGIN
 
+    def get_all_calculations(self) -> dict:
+        """
+        Возвращает все расчеты в виде словаря
+        """
+        return {
+            'power': self.required_power,
+            'torque': self.max_torque,
+            'original_power': self.max_power,
+            'power_margin': self.POWER_MARGIN
+        }
+    
+    def change_required_power_margin(self):
+        """
+        Позволяет изменить коэффициент запаса мощности
+        """
+        self.POWER_MARGIN += 0.1
 
 class DCMotorPowerTorqueReCalculator(DCMotorPowerTorqueCalculator):
-    """
-    Калькулятор мощности и момента для DC двигателя с учетом редуктора
-    """
-
+    """Калькулятор мощности и момента для DC двигателя с учетом редуктора"""
     def __init__(self, source_data, gear_data, motor_data) -> None:
         super().__init__(source_data)
         self.gear_data = gear_data
@@ -41,7 +49,7 @@ class DCMotorPowerTorqueReCalculator(DCMotorPowerTorqueCalculator):
         """Максимальный момент с учетом редуктора"""
         if self.gear_data.i_nom == 0:
             raise ValueError("Передаточное число редуктора не может быть равно нулю")
-        return (super().max_torque / self.gear_data.i_nom + self.motor_data.J * self.gear_data.i_nom * self.source_data.max_angl_acc ) / self.gear_data.kpd
+        return super().max_torque / (self.gear_data.i_nom * self.gear_data.kpd) + self.motor_data.J * self.gear_data.i_nom * self.source_data.max_angl_acc
     
     @property
     def required_power_with_gear(self) -> float:
@@ -52,8 +60,7 @@ class DCMotorPowerTorqueReCalculator(DCMotorPowerTorqueCalculator):
     def required_speed_with_gear(self) -> float:
         """Максимальная скорость с учетом редуктора"""
         return self.source_data.max_angl_speed * self.gear_data.i_nom
-    
-    
+
 
 
     
